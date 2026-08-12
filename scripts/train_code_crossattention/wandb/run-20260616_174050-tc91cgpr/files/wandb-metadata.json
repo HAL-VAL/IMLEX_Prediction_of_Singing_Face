@@ -1,0 +1,24 @@
+{
+  "os": "Linux-6.8.0-60-generic-x86_64-with-glibc2.31",
+  "python": "CPython 3.10.13",
+  "startedAt": "2026-06-16T17:40:50.778220Z",
+  "program": "/home/nagao2/src/Visualization/scripts/crossattention/train.py",
+  "codePath": "train.py",
+  "codePathLocal": "train.py",
+  "email": "nagao.haruka.nq@tut.jp",
+  "root": "/home/nagao2/src/Visualization/scripts/crossattention",
+  "host": "nagao2-vis2",
+  "executable": "/opt/conda/bin/python",
+  "cpu_count": 6,
+  "cpu_count_logical": 12,
+  "disk": {
+    "/": {
+      "total": "250375106560",
+      "used": "159005573120"
+    }
+  },
+  "memory": {
+    "total": "67103010816"
+  },
+  "writerId": "y4jgkqlvc7c0gm7ypix23brxckqpx0u2"
+}

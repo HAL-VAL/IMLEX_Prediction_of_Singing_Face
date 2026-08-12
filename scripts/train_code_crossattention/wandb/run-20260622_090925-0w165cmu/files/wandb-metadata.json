@@ -1,0 +1,36 @@
+{
+  "os": "Linux-6.8.0-60-generic-x86_64-with-glibc2.31",
+  "python": "CPython 3.10.13",
+  "startedAt": "2026-06-22T09:09:25.215067Z",
+  "program": "/home/nagao2/src/Visualization/scripts/train_code_crossattention/train_v2.py",
+  "codePath": "train_v2.py",
+  "codePathLocal": "train_v2.py",
+  "email": "nagao.haruka.nq@tut.jp",
+  "root": "/home/nagao2/src/Visualization/scripts/train_code_crossattention",
+  "host": "nagao2-vis2",
+  "executable": "/opt/conda/bin/python",
+  "cpu_count": 6,
+  "cpu_count_logical": 12,
+  "gpu": "NVIDIA TITAN RTX",
+  "gpu_count": 1,
+  "disk": {
+    "/": {
+      "total": "250375106560",
+      "used": "158939770880"
+    }
+  },
+  "memory": {
+    "total": "67103010816"
+  },
+  "gpu_nvidia": [
+    {
+      "name": "NVIDIA TITAN RTX",
+      "memoryTotal": "25769803776",
+      "cudaCores": 4608,
+      "architecture": "Turing",
+      "uuid": "GPU-5d4eaf16-b915-7d20-8fdb-eee1b4f54389"
+    }
+  ],
+  "cudaVersion": "12.2",
+  "writerId": "xnkr7dx84cknjm5kuu38z81ruocp9ot7"
+}

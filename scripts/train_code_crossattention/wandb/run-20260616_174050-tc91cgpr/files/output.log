@@ -1,0 +1,26 @@
+torch.Size([240, 768])
+torch.Size([240, 64])
+torch.Size([240, 56])
+cpu
+現在使用しているデバイス: cpu
+
+--- 音楽専用モデル学習開始（音声解析必須版・ベスト1つ保存） ---
+Epoch [1/50] Train:   0%|                                                                       | 0/152 [00:06<?, ?it/s]
+Traceback (most recent call last):
+  File "/home/nagao2/src/Visualization/scripts/crossattention/train.py", line 259, in <module>
+    main()
+  File "/home/nagao2/src/Visualization/scripts/crossattention/train.py", line 204, in main
+    for (voice_feat, mfcc, target_exp) in train_bar:
+  File "/opt/conda/lib/python3.10/site-packages/tqdm/std.py", line 1178, in __iter__
+    for obj in iterable:
+  File "/opt/conda/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 630, in __next__
+    data = self._next_data()
+  File "/opt/conda/lib/python3.10/site-packages/torch/utils/data/dataloader.py", line 674, in _next_data
+    data = self._dataset_fetcher.fetch(index)  # may raise StopIteration
+  File "/opt/conda/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in fetch
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/opt/conda/lib/python3.10/site-packages/torch/utils/data/_utils/fetch.py", line 51, in <listcomp>
+    data = [self.dataset[idx] for idx in possibly_batched_index]
+  File "/home/nagao2/src/Visualization/scripts/crossattention/train.py", line 123, in __getitem__
+    flame_data = pickle.load(f)
+KeyboardInterrupt

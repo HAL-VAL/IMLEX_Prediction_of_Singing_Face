@@ -1,0 +1,56 @@
+_wandb:
+    value:
+        cli_version: 0.27.2
+        e:
+            qx7mxlc46qmdgg413ygkco660unuuv89:
+                codePath: train.py
+                codePathLocal: train.py
+                cpu_count: 6
+                cpu_count_logical: 12
+                cudaVersion: "12.2"
+                disk:
+                    /:
+                        total: "250375106560"
+                        used: "157806559232"
+                email: nagao.haruka.nq@tut.jp
+                executable: /opt/conda/bin/python
+                gpu: NVIDIA TITAN RTX
+                gpu_count: 1
+                gpu_nvidia:
+                    - architecture: Turing
+                      cudaCores: 4608
+                      memoryTotal: "25769803776"
+                      name: NVIDIA TITAN RTX
+                      uuid: GPU-4e302bac-e59d-6e95-567f-0dbcc83e9a1d
+                host: nagao2-vis2
+                memory:
+                    total: "67103010816"
+                os: Linux-6.8.0-60-generic-x86_64-with-glibc2.31
+                program: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/train.py
+                python: CPython 3.10.13
+                root: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC
+                startedAt: "2026-06-11T07:17:10.389250Z"
+                writerId: qx7mxlc46qmdgg413ygkco660unuuv89
+        m: []
+        python_version: 3.10.13
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 2
+                - 13
+                - 16
+            "4": 3.10.13
+            "5": 0.27.2
+            "12": 0.27.2
+            "13": linux-x86_64
+batch_size:
+    value: 64
+epochs:
+    value: 100
+lr:
+    value: 0.0001
+seq_len:
+    value: 240
