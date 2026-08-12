@@ -1,0 +1,19 @@
+2026-06-10 18:27:00,359 INFO    MainThread:186 [wandb_setup.py:_flush():81] Current SDK version is 0.27.2
+2026-06-10 18:27:00,359 INFO    MainThread:186 [wandb_setup.py:_flush():81] Configure stats pid to 186
+2026-06-10 18:27:00,360 INFO    MainThread:186 [wandb_setup.py:_flush():81] Loading settings from environment variables
+2026-06-10 18:27:00,360 INFO    MainThread:186 [wandb_init.py:setup_run_log_directory():723] Logging user logs to /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/wandb/run-20260610_182700-6jhk76ol/logs/debug.log
+2026-06-10 18:27:00,360 INFO    MainThread:186 [wandb_init.py:setup_run_log_directory():724] Logging internal logs to /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/wandb/run-20260610_182700-6jhk76ol/logs/debug-internal.log
+2026-06-10 18:27:00,360 INFO    MainThread:186 [wandb_init.py:init():766] calling init triggers
+2026-06-10 18:27:00,360 INFO    MainThread:186 [wandb_init.py:init():771] wandb.init called with sweep_config: {}
+config: {'epochs': 100, 'batch_size': 64, 'lr': 0.0001, 'seq_len': 240, '_wandb': {}}
+2026-06-10 18:27:00,360 INFO    MainThread:186 [wandb_init.py:init():814] starting backend
+2026-06-10 18:27:00,360 INFO    MainThread:186 [wandb_init.py:init():829] sending inform_init request
+2026-06-10 18:27:00,754 INFO    MainThread:186 [wandb_init.py:init():834] backend started and connected
+2026-06-10 18:27:00,788 INFO    MainThread:186 [wandb_init.py:init():904] updated telemetry
+2026-06-10 18:27:00,791 INFO    MainThread:186 [wandb_init.py:init():927] communicating run to backend with 90.0 second timeout
+2026-06-10 18:27:01,938 INFO    MainThread:186 [wandb_init.py:init():972] starting run threads in backend
+2026-06-10 18:27:02,035 INFO    MainThread:186 [wandb_run.py:_console_start():2523] atexit reg
+2026-06-10 18:27:02,035 INFO    MainThread:186 [wandb_run.py:_redirect():2373] redirect: wrap_raw
+2026-06-10 18:27:02,035 INFO    MainThread:186 [wandb_run.py:_redirect():2442] Wrapping output streams.
+2026-06-10 18:27:02,036 INFO    MainThread:186 [wandb_run.py:_redirect():2465] Redirects installed.
+2026-06-10 18:27:02,039 INFO    MainThread:186 [wandb_init.py:init():1010] run started, returning control to user process

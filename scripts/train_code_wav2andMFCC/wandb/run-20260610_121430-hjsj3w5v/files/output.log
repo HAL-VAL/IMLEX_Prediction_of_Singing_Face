@@ -1,0 +1,133 @@
+torch.Size([240, 768])
+torch.Size([240, 64])
+torch.Size([240, 56])
+cuda:0
+現在使用しているデバイス: cuda
+
+--- 音楽専用モデル学習開始（音声解析必須版・ベスト1つ保存） ---
+Epoch [1/50] Train: 100%|████████████████████████████████████████████████| 152/152 [09:43<00:00,  3.84s/it, loss=0.5889]
+Epoch [2/50] Train: 100%|████████████████████████████████████████████████| 152/152 [07:09<00:00,  2.82s/it, loss=0.5759]
+ -> Result: Train Loss: 0.6199 | Val Loss: 0.5620
+    * 🌟最高精度更新（Epoch 1）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [3/50] Train: 100%|████████████████████████████████████████████████| 152/152 [07:25<00:00,  2.93s/it, loss=0.5004]
+ -> Result: Train Loss: 0.5785 | Val Loss: 0.5433
+    * 🌟最高精度更新（Epoch 2）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [4/50] Train: 100%|████████████████████████████████████████████████| 152/152 [07:13<00:00,  2.85s/it, loss=0.5514]
+ -> Result: Train Loss: 0.5533 | Val Loss: 0.5422
+    * 🌟最高精度更新（Epoch 3）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [5/50] Train: 100%|████████████████████████████████████████████████| 152/152 [07:24<00:00,  2.92s/it, loss=0.5494]
+ -> Result: Train Loss: 0.5440 | Val Loss: 0.5329
+    * 🌟最高精度更新（Epoch 4）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [6/50] Train: 100%|████████████████████████████████████████████████| 152/152 [06:46<00:00,  2.68s/it, loss=0.5246]
+ -> Result: Train Loss: 0.5367 | Val Loss: 0.5290
+    * 🌟最高精度更新（Epoch 5）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [7/50] Train: 100%|████████████████████████████████████████████████| 152/152 [07:20<00:00,  2.89s/it, loss=0.5394]
+ -> Result: Train Loss: 0.5301 | Val Loss: 0.5255
+    * 🌟最高精度更新（Epoch 6）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [8/50] Train: 100%|████████████████████████████████████████████████| 152/152 [06:59<00:00,  2.76s/it, loss=0.4957]
+ -> Result: Train Loss: 0.5228 | Val Loss: 0.5263
+Epoch [9/50] Train: 100%|████████████████████████████████████████████████| 152/152 [06:52<00:00,  2.72s/it, loss=0.5345]
+ -> Result: Train Loss: 0.5170 | Val Loss: 0.5179
+    * 🌟最高精度更新（Epoch 8）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [10/50] Train: 100%|███████████████████████████████████████████████| 152/152 [07:01<00:00,  2.77s/it, loss=0.5239]
+ -> Result: Train Loss: 0.5088 | Val Loss: 0.5171
+    * 🌟最高精度更新（Epoch 9）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [11/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:54<00:00,  2.72s/it, loss=0.4818]
+ -> Result: Train Loss: 0.5015 | Val Loss: 0.5112
+    * 🌟最高精度更新（Epoch 10）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [12/50] Train: 100%|███████████████████████████████████████████████| 152/152 [07:06<00:00,  2.81s/it, loss=0.4447]
+ -> Result: Train Loss: 0.4947 | Val Loss: 0.5147
+Epoch [13/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:43<00:00,  2.65s/it, loss=0.4437]
+ -> Result: Train Loss: 0.4873 | Val Loss: 0.5104
+    * 🌟最高精度更新（Epoch 12）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [14/50] Train: 100%|███████████████████████████████████████████████| 152/152 [07:16<00:00,  2.87s/it, loss=0.4504]
+ -> Result: Train Loss: 0.4779 | Val Loss: 0.5017
+    * 🌟最高精度更新（Epoch 13）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [15/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:52<00:00,  2.71s/it, loss=0.4314]
+ -> Result: Train Loss: 0.4701 | Val Loss: 0.4996
+    * 🌟最高精度更新（Epoch 14）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [16/50] Train: 100%|███████████████████████████████████████████████| 152/152 [07:05<00:00,  2.80s/it, loss=0.4662]
+ -> Result: Train Loss: 0.4609 | Val Loss: 0.4920
+    * 🌟最高精度更新（Epoch 15）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [17/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:44<00:00,  2.66s/it, loss=0.4780]
+ -> Result: Train Loss: 0.4551 | Val Loss: 0.4943
+Epoch [18/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:56<00:00,  2.74s/it, loss=0.4352]
+ -> Result: Train Loss: 0.4469 | Val Loss: 0.4916
+    * 🌟最高精度更新（Epoch 17）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [19/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:41<00:00,  2.64s/it, loss=0.4362]
+ -> Result: Train Loss: 0.4386 | Val Loss: 0.4919
+Epoch [20/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:54<00:00,  2.73s/it, loss=0.4093]
+ -> Result: Train Loss: 0.4323 | Val Loss: 0.4934
+Epoch [21/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:44<00:00,  2.66s/it, loss=0.4269]
+ -> Result: Train Loss: 0.4239 | Val Loss: 0.4816
+    * 🌟最高精度更新（Epoch 20）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [22/50] Train: 100%|███████████████████████████████████████████████| 152/152 [07:08<00:00,  2.82s/it, loss=0.4000]
+ -> Result: Train Loss: 0.4185 | Val Loss: 0.4791
+    * 🌟最高精度更新（Epoch 21）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [23/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:49<00:00,  2.69s/it, loss=0.4145]
+ -> Result: Train Loss: 0.4114 | Val Loss: 0.4850
+Epoch [24/50] Train: 100%|███████████████████████████████████████████████| 152/152 [07:03<00:00,  2.79s/it, loss=0.4048]
+ -> Result: Train Loss: 0.4045 | Val Loss: 0.4790
+    * 🌟最高精度更新（Epoch 23）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [25/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:49<00:00,  2.70s/it, loss=0.3940]
+ -> Result: Train Loss: 0.3995 | Val Loss: 0.4808
+Epoch [26/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:45<00:00,  2.67s/it, loss=0.3785]
+ -> Result: Train Loss: 0.3935 | Val Loss: 0.4763
+    * 🌟最高精度更新（Epoch 25）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [27/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:43<00:00,  2.66s/it, loss=0.3834]
+ -> Result: Train Loss: 0.3869 | Val Loss: 0.4712
+    * 🌟最高精度更新（Epoch 26）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [28/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:52<00:00,  2.71s/it, loss=0.3724]
+ -> Result: Train Loss: 0.3825 | Val Loss: 0.4749
+Epoch [29/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:46<00:00,  2.68s/it, loss=0.3378]
+ -> Result: Train Loss: 0.3773 | Val Loss: 0.4763
+Epoch [30/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:51<00:00,  2.71s/it, loss=0.3620]
+ -> Result: Train Loss: 0.3721 | Val Loss: 0.4822
+Epoch [31/50] Train: 100%|███████████████████████████████████████████████| 152/152 [11:49<00:00,  4.67s/it, loss=0.3545]
+ -> Result: Train Loss: 0.3669 | Val Loss: 0.4732
+Epoch [32/50] Train: 100%|███████████████████████████████████████████████| 152/152 [09:04<00:00,  3.58s/it, loss=0.3672]
+ -> Result: Train Loss: 0.3629 | Val Loss: 0.4735
+Epoch [33/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:29<00:00,  2.17s/it, loss=0.3191]
+ -> Result: Train Loss: 0.3590 | Val Loss: 0.4682
+    * 🌟最高精度更新（Epoch 32）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [34/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:29<00:00,  2.17s/it, loss=0.3599]
+ -> Result: Train Loss: 0.3540 | Val Loss: 0.4669
+    * 🌟最高精度更新（Epoch 33）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [35/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:32<00:00,  2.19s/it, loss=0.3364]
+ -> Result: Train Loss: 0.3497 | Val Loss: 0.4667
+    * 🌟最高精度更新（Epoch 34）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [36/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:46<00:00,  2.28s/it, loss=0.3196]
+ -> Result: Train Loss: 0.3473 | Val Loss: 0.4692
+Epoch [37/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:26<00:00,  2.15s/it, loss=0.3006]
+ -> Result: Train Loss: 0.3426 | Val Loss: 0.4689
+Epoch [38/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:36<00:00,  2.21s/it, loss=0.3252]
+ -> Result: Train Loss: 0.3384 | Val Loss: 0.4776
+Epoch [39/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:30<00:00,  2.18s/it, loss=0.3161]
+ -> Result: Train Loss: 0.3354 | Val Loss: 0.4658
+    * 🌟最高精度更新（Epoch 38）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [40/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:23<00:00,  2.13s/it, loss=0.3097]
+ -> Result: Train Loss: 0.3318 | Val Loss: 0.4677
+Epoch [41/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:40<00:00,  2.24s/it, loss=0.3231]
+ -> Result: Train Loss: 0.3277 | Val Loss: 0.4614
+    * 🌟最高精度更新（Epoch 40）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [42/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:39<00:00,  2.23s/it, loss=0.3118]
+ -> Result: Train Loss: 0.3257 | Val Loss: 0.4680
+Epoch [43/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:30<00:00,  2.18s/it, loss=0.3175]
+ -> Result: Train Loss: 0.3217 | Val Loss: 0.4643
+Epoch [44/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:57<00:00,  2.35s/it, loss=0.3127]
+ -> Result: Train Loss: 0.3198 | Val Loss: 0.4697
+Epoch [45/50] Train: 100%|███████████████████████████████████████████████| 152/152 [07:52<00:00,  3.11s/it, loss=0.3137]
+ -> Result: Train Loss: 0.3178 | Val Loss: 0.4609
+    * 🌟最高精度更新（Epoch 44）！モデルを上書き保存: /home/nagao2/src/Visualization/scripts/train_code_wav2andMFCC/../../checkpoints/audio_bgm_best_model.pth
+Epoch [46/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:13<00:00,  2.46s/it, loss=0.2914]
+ -> Result: Train Loss: 0.3146 | Val Loss: 0.4693
+Epoch [47/50] Train: 100%|███████████████████████████████████████████████| 152/152 [06:09<00:00,  2.43s/it, loss=0.3329]
+ -> Result: Train Loss: 0.3114 | Val Loss: 0.4643
+Epoch [48/50] Train: 100%|███████████████████████████████████████████████| 152/152 [05:30<00:00,  2.18s/it, loss=0.2939]
+ -> Result: Train Loss: 0.3101 | Val Loss: 0.4662
+Epoch [49/50] Train: 100%|███████████████████████████████████████████████| 152/152 [10:07<00:00,  4.00s/it, loss=0.3250]
+ -> Result: Train Loss: 0.3069 | Val Loss: 0.4649
+Epoch [50/50] Train: 100%|███████████████████████████████████████████████| 152/152 [08:09<00:00,  3.22s/it, loss=0.2936]
+ -> Result: Train Loss: 0.3045 | Val Loss: 0.4650
+                                                                                                                        
+ -> Result: Train Loss: 0.3026 | Val Loss: 0.4664

@@ -1,0 +1,46 @@
+_wandb:
+    value:
+        cli_version: 0.27.2
+        e:
+            y4jgkqlvc7c0gm7ypix23brxckqpx0u2:
+                codePath: train.py
+                codePathLocal: train.py
+                cpu_count: 6
+                cpu_count_logical: 12
+                disk:
+                    /:
+                        total: "250375106560"
+                        used: "159005573120"
+                email: nagao.haruka.nq@tut.jp
+                executable: /opt/conda/bin/python
+                host: nagao2-vis2
+                memory:
+                    total: "67103010816"
+                os: Linux-6.8.0-60-generic-x86_64-with-glibc2.31
+                program: /home/nagao2/src/Visualization/scripts/crossattention/train.py
+                python: CPython 3.10.13
+                root: /home/nagao2/src/Visualization/scripts/crossattention
+                startedAt: "2026-06-16T17:40:50.778220Z"
+                writerId: y4jgkqlvc7c0gm7ypix23brxckqpx0u2
+        m: []
+        python_version: 3.10.13
+        t:
+            "1":
+                - 1
+            "2":
+                - 1
+            "3":
+                - 13
+                - 16
+            "4": 3.10.13
+            "5": 0.27.2
+            "12": 0.27.2
+            "13": linux-x86_64
+batch_size:
+    value: 64
+epochs:
+    value: 50
+lr:
+    value: 0.0001
+seq_len:
+    value: 240

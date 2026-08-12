@@ -1,0 +1,163 @@
+RAM にデータを事前ロード中... (9758 件)
+Preloading: 100%|███████████████████████████████████████████████████████████████████| 9758/9758 [17:36<00:00,  9.23it/s]
+ロード完了。
+RAM にデータを事前ロード中... (609 件)
+Preloading: 100%|█████████████████████████████████████████████████████████████████████| 609/609 [01:29<00:00,  6.79it/s]
+ロード完了。
+voice_feat : torch.Size([240, 768])
+mfcc       : torch.Size([240, 64])
+target_exp : torch.Size([240, 56])
+volume     : torch.Size([240])
+
+Device       : cuda
+Total params : 3,650,616
+
+============================================================
+CrossAttention + PositionalEncoding + VolStab 学習開始
+============================================================
+Epoch [1/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.53it/s, loss=0.5241, vol_stab=0.0052]
+Epoch [2/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.57it/s, loss=0.5467, vol_stab=0.0038]
+
+ → Train: 0.6110 | Val: 0.5427
+    🌟 最高精度更新（Epoch 1）| Val Loss: 0.5427
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [3/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.55it/s, loss=0.5578, vol_stab=0.0031]
+ → Train: 0.5582 | Val: 0.5329
+    🌟 最高精度更新（Epoch 2）| Val Loss: 0.5329
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [4/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.50it/s, loss=0.5360, vol_stab=0.0026]
+ → Train: 0.5470 | Val: 0.5297
+    🌟 最高精度更新（Epoch 3）| Val Loss: 0.5297
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [5/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.47it/s, loss=0.5436, vol_stab=0.0018]
+ → Train: 0.5376 | Val: 0.5252
+    🌟 最高精度更新（Epoch 4）| Val Loss: 0.5252
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [6/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.53it/s, loss=0.5109, vol_stab=0.0017]
+ → Train: 0.5303 | Val: 0.5204
+    🌟 最高精度更新（Epoch 5）| Val Loss: 0.5204
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [7/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.49it/s, loss=0.5451, vol_stab=0.0017]
+ → Train: 0.5239 | Val: 0.5165
+    🌟 最高精度更新（Epoch 6）| Val Loss: 0.5165
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [8/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.48it/s, loss=0.4709, vol_stab=0.0018]
+ → Train: 0.5182 | Val: 0.5169
+Epoch [9/50] Train: 100%|███████████████████████████████| 152/152 [00:14<00:00, 10.43it/s, loss=0.5515, vol_stab=0.0016]
+ → Train: 0.5135 | Val: 0.5096
+    🌟 最高精度更新（Epoch 8）| Val Loss: 0.5096
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [10/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.44it/s, loss=0.4788, vol_stab=0.0016]
+ → Train: 0.5075 | Val: 0.5061
+    🌟 最高精度更新（Epoch 9）| Val Loss: 0.5061
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [11/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.49it/s, loss=0.4921, vol_stab=0.0016]
+ → Train: 0.4998 | Val: 0.4995
+    🌟 最高精度更新（Epoch 10）| Val Loss: 0.4995
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [12/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.41it/s, loss=0.4736, vol_stab=0.0019]
+ → Train: 0.4911 | Val: 0.4951
+    🌟 最高精度更新（Epoch 11）| Val Loss: 0.4951
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [13/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.47it/s, loss=0.4584, vol_stab=0.0022]
+ → Train: 0.4831 | Val: 0.4961
+Epoch [14/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.42it/s, loss=0.4298, vol_stab=0.0017]
+ → Train: 0.4750 | Val: 0.4878
+    🌟 最高精度更新（Epoch 13）| Val Loss: 0.4878
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [15/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.48it/s, loss=0.4499, vol_stab=0.0022]
+ → Train: 0.4672 | Val: 0.4900
+Epoch [16/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.37it/s, loss=0.4301, vol_stab=0.0021]
+ → Train: 0.4575 | Val: 0.4841
+    🌟 最高精度更新（Epoch 15）| Val Loss: 0.4841
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [17/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.37it/s, loss=0.4406, vol_stab=0.0022]
+ → Train: 0.4477 | Val: 0.4761
+    🌟 最高精度更新（Epoch 16）| Val Loss: 0.4761
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [18/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.42it/s, loss=0.4277, vol_stab=0.0021]
+ → Train: 0.4393 | Val: 0.4716
+    🌟 最高精度更新（Epoch 17）| Val Loss: 0.4716
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [19/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.36it/s, loss=0.4244, vol_stab=0.0026]
+ → Train: 0.4323 | Val: 0.4693
+    🌟 最高精度更新（Epoch 18）| Val Loss: 0.4693
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [20/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.43it/s, loss=0.4360, vol_stab=0.0024]
+ → Train: 0.4224 | Val: 0.4665
+    🌟 最高精度更新（Epoch 19）| Val Loss: 0.4665
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [21/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.41it/s, loss=0.3887, vol_stab=0.0021]
+ → Train: 0.4141 | Val: 0.4680
+Epoch [22/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.35it/s, loss=0.3853, vol_stab=0.0024]
+ → Train: 0.4054 | Val: 0.4604
+    🌟 最高精度更新（Epoch 21）| Val Loss: 0.4604
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [23/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.33it/s, loss=0.4190, vol_stab=0.0026]
+ → Train: 0.3990 | Val: 0.4659
+Epoch [24/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.28it/s, loss=0.3867, vol_stab=0.0026]
+ → Train: 0.3914 | Val: 0.4598
+    🌟 最高精度更新（Epoch 23）| Val Loss: 0.4598
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [25/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.32it/s, loss=0.3197, vol_stab=0.0027]
+ → Train: 0.3846 | Val: 0.4661
+Epoch [26/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.37it/s, loss=0.3591, vol_stab=0.0021]
+ → Train: 0.3775 | Val: 0.4613
+Epoch [27/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.32it/s, loss=0.3709, vol_stab=0.0027]
+ → Train: 0.3708 | Val: 0.4627
+Epoch [28/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.36it/s, loss=0.3593, vol_stab=0.0027]
+ → Train: 0.3655 | Val: 0.4709
+Epoch [29/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.37it/s, loss=0.3559, vol_stab=0.0031]
+ → Train: 0.3592 | Val: 0.4622
+Epoch [30/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.34it/s, loss=0.3690, vol_stab=0.0030]
+ → Train: 0.3535 | Val: 0.4625
+Epoch [31/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.37it/s, loss=0.3474, vol_stab=0.0028]
+ → Train: 0.3489 | Val: 0.4634
+Epoch [32/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.46it/s, loss=0.3533, vol_stab=0.0031]
+ → Train: 0.3431 | Val: 0.4611
+Epoch [33/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.39it/s, loss=0.3435, vol_stab=0.0029]
+ → Train: 0.3390 | Val: 0.4635
+Epoch [34/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.39it/s, loss=0.3197, vol_stab=0.0030]
+ → Train: 0.3347 | Val: 0.4635
+Epoch [35/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.38it/s, loss=0.3196, vol_stab=0.0025]
+ → Train: 0.3292 | Val: 0.4608
+Epoch [36/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.30it/s, loss=0.3419, vol_stab=0.0031]
+ → Train: 0.3264 | Val: 0.4582
+    🌟 最高精度更新（Epoch 35）| Val Loss: 0.4582
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [37/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.32it/s, loss=0.3007, vol_stab=0.0029]
+ → Train: 0.3225 | Val: 0.4616
+Epoch [38/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.29it/s, loss=0.3217, vol_stab=0.0030]
+ → Train: 0.3183 | Val: 0.4588
+Epoch [39/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.35it/s, loss=0.2951, vol_stab=0.0030]
+ → Train: 0.3134 | Val: 0.4692
+Epoch [40/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.29it/s, loss=0.2888, vol_stab=0.0030]
+ → Train: 0.3095 | Val: 0.4620
+Epoch [41/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.35it/s, loss=0.2759, vol_stab=0.0026]
+ → Train: 0.3081 | Val: 0.4625
+Epoch [42/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.31it/s, loss=0.3057, vol_stab=0.0030]
+ → Train: 0.3049 | Val: 0.4569
+    🌟 最高精度更新（Epoch 41）| Val Loss: 0.4569
+       保存先: /home/nagao2/src/Visualization/scripts/train_code_crossattention/../../checkpoints/crossattn_pe_volstab_best_model.pth
+Epoch [43/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.43it/s, loss=0.2990, vol_stab=0.0029]
+ → Train: 0.3016 | Val: 0.4616
+Epoch [44/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.34it/s, loss=0.3215, vol_stab=0.0029]
+ → Train: 0.2987 | Val: 0.4654
+Epoch [45/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.41it/s, loss=0.3019, vol_stab=0.0028]
+ → Train: 0.2950 | Val: 0.4647
+Epoch [46/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.32it/s, loss=0.3125, vol_stab=0.0027]
+ → Train: 0.2920 | Val: 0.4665
+Epoch [47/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.35it/s, loss=0.3085, vol_stab=0.0028]
+ → Train: 0.2899 | Val: 0.4619
+Epoch [48/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.38it/s, loss=0.2635, vol_stab=0.0028]
+ → Train: 0.2878 | Val: 0.4588
+Epoch [49/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.34it/s, loss=0.2974, vol_stab=0.0029]
+ → Train: 0.2853 | Val: 0.4626
+Epoch [50/50] Train: 100%|██████████████████████████████| 152/152 [00:14<00:00, 10.33it/s, loss=0.2767, vol_stab=0.0030]
+ → Train: 0.2838 | Val: 0.4645
+                                                                                                                        
+ → Train: 0.2811 | Val: 0.4709
+
+============================================================
+学習完了 | Best Val Loss: 0.4569
+============================================================
