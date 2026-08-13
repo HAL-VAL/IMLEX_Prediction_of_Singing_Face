@@ -10,6 +10,10 @@ Model.
 > the purpose and usage of each script, is planned for a future 
 > update.
 
+## Dataset
+
+This project uses the [SingingHead dataset](https://github.com/wsj-sjtu/SingingHead).
+
 ## Contents
 
 - Training scripts
