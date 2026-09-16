@@ -6,9 +6,6 @@ SingingHead-Animation: Music-Driven Facial Expression Estimation
 Model: MusicToExpressionTransformer (Cross-Attention only, no PE)
 Input:  Vocal wav2vec features (768dim) + BGM MFCC features (64dim)
         * Voice/BGM are each fully projected to d_model (256).
-        * Unlike the CrossAttn+PE+VolStab version, PositionalEncoding is
-          NOT applied here (the PositionalEncoding class is defined but
-          unused) — this isolates the effect of positional information.
         * Fusion is done via a single Cross-Attention layer
           (Query=voice/vocal, Key/Value=bgm), with a residual connection
           + LayerNorm, followed by a self-attention-only TransformerEncoder
@@ -37,6 +34,7 @@ Checkpoint: Overwritten and saved only when validation loss improves
             crossattn_volstab_best_model.pth)
 =============================================================================
 """
+
 import os
 import pickle
 import math
@@ -74,23 +72,6 @@ NECK_POSE_END     = EXP_ONLY_DIM + 6  # = 56
 # ============================================================
 # 1. Model definition (CrossAttention only, no PE)
 # ============================================================
-
-class PositionalEncoding(nn.Module):
-    def __init__(self, d_model, max_len=5000):
-        super().__init__()
-        pe = torch.zeros(max_len, d_model)
-        position = torch.arange(0, max_len, dtype=torch.float).unsqueeze(1)
-        div_term = torch.exp(
-            torch.arange(0, d_model, 2).float() * (-math.log(10000.0) / d_model)
-        )
-        pe[:, 0::2] = torch.sin(position * div_term)
-        pe[:, 1::2] = torch.cos(position * div_term)
-        pe = pe.unsqueeze(0)
-        self.register_buffer("pe", pe)
-
-    def forward(self, x):
-        return x + self.pe[:, : x.size(1)]
-
 
 class MusicToExpressionTransformer(nn.Module):
     def __init__(
