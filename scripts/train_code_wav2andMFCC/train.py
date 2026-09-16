@@ -1,3 +1,23 @@
+"""
+=============================================================================
+SingingHead-Animation: Music-Driven Facial Expression Estimation (Baseline)
+=============================================================================
+Model: MusicToExpressionTransformer (Concat approach, baseline version)
+Input:  Vocal wav2vec features (768dim) + BGM MFCC features (64dim)
+        * Voice/BGM are each projected to d_model//2, then simply concatenated
+        (No Cross-Attention. PositionalEncoding applied only once, after concat)
+Output: FLAME expression + neck/global pose (56 dims total, jaw excluded)
+Loss:   MSE + velocity loss (vel) only
+        * Silence-stabilization loss (vol_stab) not implemented
+          (this is what "no volstab" in the filename refers to)
+Data:   Loaded from disk on every __getitem__ call
+        (no RAM preloading; flame is .pkl format, volume is unused)
+Training: epochs=100, batch_size=64, lr=1e-4, seq_len=240
+Checkpoint: Overwritten and saved only when validation loss improves
+            (keeps only the single best checkpoint)
+=============================================================================
+"""
+
 import os
 import pickle
 import math
@@ -12,20 +32,18 @@ from tqdm import tqdm
 import wandb
 import time
 
-# 🌟 wandb のインポート（任意利用は継続）
+# Import wandb (optional usage retained)
 try:
     import wandb
     WANDB_AVAILABLE = True
 except ImportError:
     WANDB_AVAILABLE = False
 
-# 🌟 librosa と numpy のインポートを【必須】に変更
-# 環境に入っていない場合は、ここで明確にエラー（ImportError）を発生させて処理を止めます
 import numpy as np
 
 
 # ----------------------------------------------------
-# 1. モデルの定義（音楽のみ入力に特化）
+# 1. Model definition
 # ----------------------------------------------------
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -87,7 +105,7 @@ def compute_loss(pred, target, lambda_vel=1.0):
     return mse_loss + lambda_vel * vel_loss, mse_loss, vel_loss
 
 # ----------------------------------------------------
-# 2. データセットの定義（音声解析を必須化）
+# 2. Dataset definition
 # ----------------------------------------------------
 class RealSingingHeadDataset(Dataset):
     def __init__(self, txt_path, wav2vec_dir, mfcc_dir, flame_dir, seq_len=240):
@@ -106,7 +124,7 @@ class RealSingingHeadDataset(Dataset):
         flame_path = os.path.join(self.flame_dir, f"{data_id}.pkl")
         voice_path = os.path.join(self.wav2vec_dir, f"{data_id}.npy")
 
-        # 🌟 wav2vec特徴量の読み込み
+        # Load wav2vec features
         voice_feat = torch.from_numpy(np.load(voice_path)).float()
         voice_feat = (
             F.interpolate(
@@ -119,20 +137,21 @@ class RealSingingHeadDataset(Dataset):
             .T
         )
             
-        # 🌟 MFCC特徴量の読み込み
+        # Load MFCC features
         mfcc_path = os.path.join(self.mfcc_dir, f"{data_id}.npy")
         mfcc = torch.from_numpy(np.load(mfcc_path)).float()
 
 
             
-        # 表情の正解データの読み込み
+        # Load ground-truth expression data
         with open(flame_path, 'rb') as f:
             flame_data = pickle.load(f)
             
         exp_key = 'expcodes' if 'expcodes' in flame_data else 'expression'
         pose_key = 'posecodes' if 'posecodes' in flame_data else 'pose'
         exp = torch.FloatTensor(flame_data[exp_key])
-        # jawを除いたposeの部分だけをtargetに含める（これも予測対象から外すため）
+        # Include only the non-jaw part of pose in the target
+        # (jaw is also excluded from the prediction target)
         pose = torch.FloatTensor(flame_data[pose_key])
         pose_no_jaw = pose[:, :6]
         target_exp = torch.cat(
@@ -140,7 +159,7 @@ class RealSingingHeadDataset(Dataset):
             dim=-1
         )
 
-        # パディングおよび切り詰め処理
+        # Padding and truncation
         if mfcc.size(0) > self.seq_len: mfcc = mfcc[:self.seq_len, :]
         else: mfcc = F.pad(mfcc, (0, 0, 0, self.seq_len - mfcc.size(0)), "constant", 0)
             
@@ -150,13 +169,12 @@ class RealSingingHeadDataset(Dataset):
         return (voice_feat, mfcc, target_exp)
 
 # ----------------------------------------------------
-# 3. メイン学習処理
+# 3. Main training process
 # ----------------------------------------------------
 def main():
-    # train.py が置いてあるフォルダの絶対パスを自動取得
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # OSに合わせて正しい区切り文字（Linuxなら / ）でパスを結合する
+    # Join paths using the correct separator for the OS (e.g. "/" on Linux)
     dataset_base_dir = os.path.abspath(os.path.join(current_dir, "..", "..", "data", "SingingHead"))
 
     train_txt = os.path.join(dataset_base_dir, "train.txt")
@@ -201,8 +219,8 @@ def main():
     os.makedirs(checkpoint_dir, exist_ok=True)
     best_val_loss = float('inf')
     
-    print(f"現在使用しているデバイス: {device}")
-    print(f"\n--- 音楽専用モデル学習開始（音声解析必須版・ベスト1つ保存） ---")
+    print(f"Currently using device: {device}")
+    print(f"\n--- Starting model training ---")
 
     for epoch in range(1, epochs + 1):
         model.train()
@@ -253,7 +271,7 @@ def main():
             best_filename = "audio_bgm_best_model_ep100.pth"
             best_path = os.path.join(checkpoint_dir, best_filename)
             torch.save(model.state_dict(), best_path)
-            print(f"    * 🌟最高精度更新（Epoch {epoch}）！モデルを上書き保存: {best_path}")
+            print(f"    * New best accuracy (Epoch {epoch})! Overwriting saved model: {best_path}")
             
             if WANDB_AVAILABLE:
                 artifact = wandb.Artifact(name="audio-bgm-model", type="model", description=f"Achieved at epoch {epoch}")
