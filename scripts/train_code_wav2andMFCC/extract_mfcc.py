@@ -17,13 +17,13 @@ N_MFCC = 64
 SEQ_LEN = 240
 
 # ==========================================
-# 補間関数
+# Interpolation function
 # ==========================================
 
 def resize_feature(feat, target_len=240):
     """
     feat: (T, D)
-    return: (240, D)
+    return: (target_len, D)
     """
 
     old_len = feat.shape[0]
@@ -46,7 +46,7 @@ def resize_feature(feat, target_len=240):
     return out
 
 # ==========================================
-# ファイル一覧
+# List input files
 # ==========================================
 
 wav_files = sorted(
@@ -57,7 +57,7 @@ wav_files = sorted(
 print(f"Found {len(wav_files)} files")
 
 # ==========================================
-# MFCC抽出
+# MFCC extraction
 # ==========================================
 
 for wav_name in tqdm(wav_files, desc="Extract MFCC"):
@@ -92,10 +92,10 @@ for wav_name in tqdm(wav_files, desc="Extract MFCC"):
             hop_length=hop_length
         )
 
-        # (64, T) → (T, 64)
+        # (64, T) -> (T, 64)
         mfcc = mfcc.T
 
-        # 240フレームへ補間
+        # Interpolate to a fixed number of frames (SEQ_LEN)
         mfcc = resize_feature(
             mfcc,
             SEQ_LEN
