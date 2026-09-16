@@ -1,3 +1,41 @@
+"""
+=============================================================================
+SingingHead-Animation: Music-Driven Facial Expression Estimation
+(CrossAttention + PositionalEncoding + Volume-Stabilization version)
+=============================================================================
+Model: MusicToExpressionTransformer (Cross-Attention + PositionalEncoding)
+Input:  Vocal wav2vec features (768dim) + BGM MFCC features (64dim)
+        * Voice/BGM are each fully projected to d_model (256).
+        * Unlike the earlier CrossAttention-only version, PositionalEncoding
+          is now applied separately to both the voice (Query) and BGM
+          (Key/Value) projections before attention.
+        * Fusion is done via Cross-Attention (Query=voice, Key/Value=bgm),
+          with a residual connection + LayerNorm before the
+          TransformerEncoder (4 layers).
+Output: FLAME expression + neck/global pose (56 dims total: 50 expression
+        dims + 6 non-jaw pose dims; jaw is excluded)
+        * Dimension layout is explicit via named constants:
+          EXP_ONLY_DIM=50, POSE_NO_JAW_DIM=6, TARGET_DIM=56
+          GLOBAL_POSE_START=50, NECK_POSE_START=53, NECK_POSE_END=56
+Loss:   MSE + velocity loss (vel) + silence-stabilization loss (vol_stab)
+        * vol_stab uses precomputed per-frame volume to down-weight
+          movement during silent/low-volume segments, discouraging
+          spurious expression jitter when there's no audio signal.
+Data:   RAM-preloaded dataset (RealSingingHeadDataset)
+        * All samples (voice/mfcc/flame/volume) are loaded into memory once
+          at dataset construction time, so there's no disk I/O from the
+          2nd epoch onward.
+        * FLAME data is read from separate "_exp.npy" / "_pose.npy" files
+          (flame_npy dir), not from .pkl as in earlier scripts.
+        * Requires a precomputed volume_features directory alongside the
+          usual wav2vec/mfcc/flame feature directories.
+Training: epochs=50, batch_size=64, lr=1e-4, seq_len=240,
+          lambda_vel=1.0, lambda_vol_stab=1.0, beta=5.0
+Checkpoint: Overwritten and saved only when validation loss improves
+            (keeps only the single best checkpoint:
+            crossattn_pe_volstab_best_model.pth)
+=============================================================================
+"""
 import os
 import pickle
 import math
