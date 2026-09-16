@@ -1,3 +1,42 @@
+"""
+=============================================================================
+SingingHead-Animation: Music-Driven Facial Expression Estimation
+(CrossAttention-only + Volume-Stabilization version, no PositionalEncoding)
+=============================================================================
+Model: MusicToExpressionTransformer (Cross-Attention only, no PE)
+Input:  Vocal wav2vec features (768dim) + BGM MFCC features (64dim)
+        * Voice/BGM are each fully projected to d_model (256).
+        * Unlike the CrossAttn+PE+VolStab version, PositionalEncoding is
+          NOT applied here (the PositionalEncoding class is defined but
+          unused) — this isolates the effect of positional information.
+        * Fusion is done via a single Cross-Attention layer
+          (Query=voice/vocal, Key/Value=bgm), with a residual connection
+          + LayerNorm, followed by a self-attention-only TransformerEncoder
+          (4 layers).
+Output: FLAME expression + neck/global pose (56 dims total: 50 expression
+        dims + 6 non-jaw pose dims; jaw is excluded)
+        * Dimension layout is explicit via named constants:
+          EXP_ONLY_DIM=50, POSE_NO_JAW_DIM=6, TARGET_DIM=56
+          GLOBAL_POSE_START=50, NECK_POSE_START=53, NECK_POSE_END=56
+Loss:   MSE + velocity loss (vel) + silence-stabilization loss (vol_stab)
+        * vol_stab uses precomputed per-frame volume to down-weight
+          movement during silent/low-volume segments, discouraging
+          spurious expression jitter when there's no audio signal.
+Data:   RAM-preloaded dataset (RealSingingHeadDataset)
+        * All samples (voice/mfcc/flame/volume) are loaded into memory once
+          at dataset construction time, so there's no disk I/O from the
+          2nd epoch onward.
+        * FLAME data is read from separate "_exp.npy" / "_pose.npy" files
+          (flame_npy dir).
+        * Requires a precomputed volume_features directory alongside the
+          usual wav2vec/mfcc/flame feature directories.
+Training: epochs=50, batch_size=64, lr=1e-4, seq_len=240,
+          lambda_vel=1.0, lambda_vol_stab=1.0, beta=5.0
+Checkpoint: Overwritten and saved only when validation loss improves
+            (keeps only the single best checkpoint:
+            crossattn_volstab_best_model.pth)
+=============================================================================
+"""
 import os
 import pickle
 import math
@@ -21,7 +60,7 @@ import numpy as np
 
 
 # ============================================================
-# 次元定義
+# Dimension definitions
 # ============================================================
 EXP_ONLY_DIM    = 50
 POSE_NO_JAW_DIM = 6
@@ -33,7 +72,7 @@ NECK_POSE_END     = EXP_ONLY_DIM + 6  # = 56
 
 
 # ============================================================
-# 1. モデル定義（CrossAttention のみ・PE なし）
+# 1. Model definition (CrossAttention only, no PE)
 # ============================================================
 
 class PositionalEncoding(nn.Module):
@@ -64,18 +103,18 @@ class MusicToExpressionTransformer(nn.Module):
         num_layers=4,
     ):
         super().__init__()
-        # Linear projection（各々 d_model 次元へ）
+        # Linear projection (each into d_model dimensions)
         self.voice_projector = nn.Linear(voice_dim, d_model)
         self.bgm_projector   = nn.Linear(bgm_dim,   d_model)
 
-        # CrossAttention（1層・独立・PE なし）
+        # CrossAttention (1 layer, standalone, no PE)
         # Query: Vocal, Key/Value: BGM
         self.cross_attn = nn.MultiheadAttention(
             embed_dim=d_model, num_heads=nhead, batch_first=True
         )
         self.norm1 = nn.LayerNorm(d_model)
 
-        # Transformer Encoder（Self-Attention のみ・4層）
+        # Transformer Encoder (self-attention only, 4 layers)
         encoder_layer = nn.TransformerEncoderLayer(
             d_model=d_model,
             nhead=nhead,
@@ -90,24 +129,24 @@ class MusicToExpressionTransformer(nn.Module):
         self.output_layer = nn.Linear(d_model, exp_dim)
 
     def forward(self, voice_feat, bgm_feat):
-        # 1. Linear projection → d_model 次元
+        # 1. Linear projection -> d_model dimensions
         q = self.voice_projector(voice_feat)  # (B, T, 256)
         k = self.bgm_projector(bgm_feat)      # (B, T, 256)
         v = k
 
-        # 2. CrossAttention：Vocal(Q) が BGM(K,V) のどこを参照するか学習
+        # 2. CrossAttention: learn which parts of BGM (K,V) the Vocal (Q) attends to
         attn_out, _ = self.cross_attn(q, k, v)
-        x = self.norm1(q + attn_out)  # 残差結合 + LayerNorm
+        x = self.norm1(q + attn_out)  # Residual connection + LayerNorm
 
-        # 3. Transformer Encoder：フレーム間の時系列関係を学習
+        # 3. Transformer Encoder: learn temporal relationships between frames
         x = self.transformer_encoder(x)
 
-        # 4. 出力層
+        # 4. Output layer
         return self.output_layer(x)
 
 
 # ============================================================
-# 2. 損失関数（MSE + 速度損失 + 無音安定化損失）
+# 2. Loss function (MSE + velocity loss + silence-stabilization loss)
 # ============================================================
 
 def compute_loss(
@@ -118,15 +157,15 @@ def compute_loss(
     lambda_vol_stab: float = 1.0,
     beta: float = 5.0,
 ):
-    # MSE 損失
+    # MSE loss
     mse_loss = F.mse_loss(pred, target)
 
-    # 速度損失（時間的平滑化）
+    # Velocity loss (temporal smoothing)
     pred_vel   = pred[:, 1:, :]   - pred[:, :-1, :]
     target_vel = target[:, 1:, :] - target[:, :-1, :]
     vel_loss   = F.mse_loss(pred_vel, target_vel)
 
-    # 無音安定化損失（無音区間の不要な動きを抑制）
+    # Silence-stabilization loss (suppresses unwanted movement during silent segments)
     w_vol_pair     = torch.exp(-beta * 0.5 * (volume[:, 1:] + volume[:, :-1]))
     pred_diff_sq   = (pred[:, 1:, :] - pred[:, :-1, :]) ** 2
     pred_diff_norm = pred_diff_sq.mean(dim=-1)
@@ -144,11 +183,11 @@ def compute_loss(
 
 
 # ============================================================
-# 3. データセット（RAMプリロード版・volume付き）
+# 3. Dataset (RAM-preloaded version, with volume)
 # ============================================================
 
 class RealSingingHeadDataset(Dataset):
-    """起動時に全データを RAM にロード。2エポック目以降はディスクアクセスなし。"""
+    """Loads all data into RAM at startup. No disk access from the 2nd epoch onward."""
 
     def __init__(
         self,
@@ -174,12 +213,12 @@ class RealSingingHeadDataset(Dataset):
         return len(self.data_ids)
 
     def _preload_all(self):
-        print(f"RAM にデータを事前ロード中... ({len(self.data_ids)} 件)")
+        print(f"Preloading data into RAM... ({len(self.data_ids)} items)")
         self.cache = []
 
         for data_id in tqdm(self.data_ids, desc="Preloading"):
 
-            # wav2vec 特徴（399フレーム → seq_len へ補間）
+            # wav2vec features (interpolate from 399 frames to seq_len)
             voice_feat = torch.from_numpy(
                 np.load(os.path.join(self.wav2vec_dir, f"{data_id}.npy"))
             ).float()
@@ -192,7 +231,7 @@ class RealSingingHeadDataset(Dataset):
                 ).squeeze(0).T
             )
 
-            # MFCC 特徴（240フレーム固定）
+            # MFCC features (fixed at 240 frames)
             mfcc = torch.from_numpy(
                 np.load(os.path.join(self.mfcc_dir, f"{data_id}.npy"))
             ).float()
@@ -201,7 +240,7 @@ class RealSingingHeadDataset(Dataset):
             elif mfcc.size(0) < self.seq_len:
                 mfcc = F.pad(mfcc, (0, 0, 0, self.seq_len - mfcc.size(0)))
 
-            # FLAME パラメータ（npy 版）
+            # FLAME parameters (npy version)
             flame_base = os.path.join(self.flame_dir, data_id)
             exp  = torch.from_numpy(np.load(f"{flame_base}_exp.npy")).float()
             pose = torch.from_numpy(np.load(f"{flame_base}_pose.npy")).float()
@@ -211,21 +250,21 @@ class RealSingingHeadDataset(Dataset):
             elif target_exp.size(0) < self.seq_len:
                 target_exp = F.pad(target_exp, (0, 0, 0, self.seq_len - target_exp.size(0)))
 
-            # 音量（事前計算済み）
+            # Volume
             volume = torch.from_numpy(
                 np.load(os.path.join(self.volume_dir, f"{data_id}.npy"))
             ).float()
 
             self.cache.append((voice_feat, mfcc, target_exp, volume))
 
-        print("ロード完了。")
+        print("Loading complete.")
 
     def __getitem__(self, idx):
         return self.cache[idx]
 
 
 # ============================================================
-# 4. メイン学習ループ
+# 4. Main training loop
 # ============================================================
 
 def main():
@@ -241,7 +280,7 @@ def main():
     wav2vec_dir = os.path.join(dataset_base_dir, "wav2vec_features")
     volume_dir  = os.path.join(dataset_base_dir, "volume_features")
 
-    # ---- 学習パラメータ ----
+    # ---- Training hyperparameters ----
     epochs          = 50
     batch_size      = 64
     lr              = 1e-4
@@ -265,7 +304,7 @@ def main():
             },
         )
 
-    # ---- データロード（RAM プリロード） ----
+    # ---- Load data (RAM preload) ----
     train_dataset = RealSingingHeadDataset(
         train_txt, wav2vec_dir, mfcc_dir, flame_dir, volume_dir, seq_len=seq_len
     )
@@ -279,7 +318,7 @@ def main():
         val_dataset, batch_size=batch_size, shuffle=False, num_workers=0
     )
 
-    # ---- モデル確認 ----
+    # ---- Sanity-check the model ----
     sample_voice, sample_mfcc, sample_target, sample_volume = train_dataset[0]
     print(f"voice_feat : {sample_voice.shape}")
     print(f"mfcc       : {sample_mfcc.shape}")
@@ -297,7 +336,7 @@ def main():
     print(f"\nDevice       : {device}")
     print(f"Total params : {total_params:,}")
     print(f"\n{'='*60}")
-    print("CrossAttention + VolStab（PE なし）学習開始")
+    print("Starting CrossAttention + VolStab (no PE) training")
     print(f"{'='*60}\n")
 
     checkpoint_dir = os.path.join(current_dir, "..", "..", "checkpoints")
@@ -306,7 +345,7 @@ def main():
 
     for epoch in range(1, epochs + 1):
 
-        # ---- 訓練 ----
+        # ---- Training ----
         model.train()
         train_loss_sum = 0.0
         train_bar = tqdm(train_loader, desc=f"Epoch [{epoch}/{epochs}] Train")
@@ -334,7 +373,7 @@ def main():
                 "vol_stab": f"{loss_dict['vol_stab']:.4f}",
             })
 
-        # ---- 検証 ----
+        # ---- Validation ----
         model.eval()
         val_loss_sum = 0.0
         val_bar = tqdm(val_loader, desc=f"Epoch [{epoch}/{epochs}] Val  ", leave=False)
@@ -371,8 +410,8 @@ def main():
                 checkpoint_dir, "crossattn_volstab_best_model.pth"
             )
             torch.save(model.state_dict(), best_path)
-            print(f"    🌟 最高精度更新（Epoch {epoch}）| Val Loss: {avg_val:.4f}")
-            print(f"       保存先: {best_path}")
+            print(f"    New best accuracy (Epoch {epoch}) | Val Loss: {avg_val:.4f}")
+            print(f"       Saved to: {best_path}")
 
             if WANDB_AVAILABLE:
                 artifact = wandb.Artifact(
@@ -383,7 +422,7 @@ def main():
                 wandb.log_artifact(artifact)
 
     print(f"\n{'='*60}")
-    print(f"学習完了 | Best Val Loss: {best_val_loss:.4f}")
+    print(f"Training complete | Best Val Loss: {best_val_loss:.4f}")
     print(f"{'='*60}")
 
     if WANDB_AVAILABLE:
