@@ -17,33 +17,35 @@ if not hasattr(np, 'str'):
     np.str = str
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"使用デバイス: {device}")
+print(f"Using device: {device}")
 
 # ==========================================
-# パス設定
+# Path configuration
 # ==========================================
 flame_base_dir   = r"D:\flame"
 dataset_base_dir = r"D:\MasterDataset\SingingHead\Dataset"
 
-#pred_dir          = os.path.join(flame_base_dir, "predictions", "predictions_audio_bgm")  # 提案手法のみ predictions_crossattn_pe_volstab
+#pred_dir          = os.path.join(flame_base_dir, "predictions", "predictions_audio_bgm")  # only for the proposed method: predictions_crossattn_pe_volstab
 #pred_dir = os.path.join(flame_base_dir, "predictions", "predictions_crossattn_pe_volstab")
-pred_dir   = os.path.join(dataset_base_dir, "flame_seqs")
-gt_dir   = os.path.join(dataset_base_dir, "flame_seqs")  # 追加
-mixed_audio_dir   = os.path.join(flame_base_dir, "mixed_audio")   # ミックス済み音声フォルダ
+pred_dir = os.path.join(flame_base_dir, "predictions", "predictions_crossattn_pe") 
+#pred_dir   = os.path.join(dataset_base_dir, "flame_seqs")
+gt_dir   = os.path.join(dataset_base_dir, "flame_seqs")
+mixed_audio_dir   = os.path.join(flame_base_dir, "mixed_audio")   # Folder containing already-mixed audio
 output_video_dir  = os.path.join(flame_base_dir, "ours_only_videos")
 temp_img_dir      = os.path.join(flame_base_dir, "temp_rendered_frames")
 os.makedirs(output_video_dir, exist_ok=True)
 
 # ==========================================
-# 出力したいIDをここで指定
+# Specify the IDs to render
 # ==========================================
-#target_ids = ["id22_15_0_7", "id57_2_0_9", "id21_5_0_11", "id49_14_0_19"]  # ← 好きなIDを列挙
-target_ids = ["id0_10_0_26"]
+#target_ids = ["id22_15_0_7", "id57_2_0_9", "id21_5_0_11", "id49_14_0_19", "id_16_19_0_17"]  # <- list whichever IDs you want
+target_ids = ["id1_18_1_5", "id57_2_0_9", "id49_14_0_19"]
+
 
 # ==========================================
-# FLAMEモデルのロード
+# Load the FLAME model
 # ==========================================
-print("FLAMEモデルをロード中...")
+print("Loading FLAME model...")
 config = get_config()
 config.batch_size = 1
 config.flame_model_path                = r"D:\flame\FLAME_PyTorch\model\generic_model.pkl"
@@ -80,8 +82,8 @@ def render_sequence(shape_params, expressions, poses, name_prefix, num_frames):
         tri_mesh = trimesh.Trimesh(vertices, faces, process=False)
         mesh = pyrender.Mesh.from_trimesh(tri_mesh, material=primitive_material, smooth=True)
 
-        #scene = pyrender.Scene(ambient_light=[.2, .2, .2], bg_color=[0, 0, 0, 1.0])
-        scene = pyrender.Scene(ambient_light=[.2, .2, .2], bg_color=[1.0, 1.0, 1.0, 1.0]) # 白
+        scene = pyrender.Scene(ambient_light=[.2, .2, .2], bg_color=[0, 0, 0, 1.0])
+        #scene = pyrender.Scene(ambient_light=[.2, .2, .2], bg_color=[1.0, 1.0, 1.0, 1.0]) # white
         scene.add(mesh, pose=np.eye(4))
 
         camera = pyrender.IntrinsicsCamera(
@@ -111,48 +113,48 @@ def render_sequence(shape_params, expressions, poses, name_prefix, num_frames):
     return saved_files
 
 # ==========================================
-# メインループ：指定IDのみ処理
+# Main loop
 # ==========================================
-print(f"【処理開始】対象ID {len(target_ids)}件")
-print(f"出力先: {output_video_dir}")
+print(f"[Starting processing] {len(target_ids)} target IDs")
+print(f"Output directory: {output_video_dir}")
 
 for index, data_id in enumerate(target_ids):
-    print(f"\n[{index + 1}/{len(target_ids)}] 処理中: {data_id}")
+    print(f"\n[{index + 1}/{len(target_ids)}] Processing: {data_id}")
 
-    # 変更後
+    # After the change
     pred_path = os.path.join(pred_dir, f"{data_id}.pkl")
     gt_path   = os.path.join(gt_dir, f"{data_id}.pkl")
 
     if not os.path.exists(pred_path):
-        print(f"  スキップ: 予測pklが見つかりません: {pred_path}")
+        print(f"  Skipping: prediction pkl not found: {pred_path}")
         continue
     if not os.path.exists(gt_path):
-        print(f"  スキップ: GT pklが見つかりません: {gt_path}")
+        print(f"  Skipping: GT pkl not found: {gt_path}")
         continue
 
-    # 予測（exp・poseはこちらを使用）
+    # Prediction (use this for exp/pose)
     with open(pred_path, 'rb') as f:
         pd = pickle.load(f, encoding='latin1')
 
-    # GT（shapeはこちらを使用）
+    # GT (use this for shape)
     with open(gt_path, 'rb') as f:
         gt = pickle.load(f, encoding='latin1')
 
-    shape_np     = np.array(gt['shapecode']).reshape(1, -1)[:, :300]   # ← GTから取得
+    shape_np     = np.array(gt['shapecode']).reshape(1, -1)[:, :300]   # <- taken from GT
     shape_params = torch.tensor(shape_np, dtype=torch.float32).to(device)
-    exp  = torch.tensor(pd['expcodes'],  dtype=torch.float32).to(device)  # ← predictionのまま
-    pose = torch.tensor(pd['posecodes'], dtype=torch.float32).to(device)  # ← predictionのまま
+    exp  = torch.tensor(pd['expcodes'],  dtype=torch.float32).to(device)  # <- kept from prediction
+    pose = torch.tensor(pd['posecodes'], dtype=torch.float32).to(device)  # <- kept from prediction
 
     num_frames = len(exp)
-    print(f"  フレーム数: {num_frames}")
+    print(f"  Number of frames: {num_frames}")
 
-    print("  レンダリング中...")
-    images = render_sequence(shape_params, exp, pose, f"GT_{data_id}", num_frames)
+    print("  Rendering...")
+    images = render_sequence(shape_params, exp, pose, f"novolstab_{data_id}", num_frames)
 
     fps = 30
     clip = ImageSequenceClip(images, fps=fps)
 
-    # ---- 音声（ミックス済みファイルをそのまま使用） ----
+    # ---- Audio (use the already-mixed file as-is) ----
     mixed_path = None
     for candidate_name in [f"{data_id}_mixed", data_id]:
         for ext in [".wav", ".mp3"]:
@@ -164,16 +166,16 @@ for index, data_id in enumerate(target_ids):
             break
 
     if mixed_path is not None:
-        print(f"  音声: {mixed_path}")
+        print(f"  Audio: {mixed_path}")
         mixed_audio = AudioFileClip(mixed_path)
         if mixed_audio.duration > clip.duration:
             mixed_audio = mixed_audio.subclipped(0, clip.duration)
         clip = clip.with_audio(mixed_audio)
     else:
-        print(f"  警告: ミックス音声が見つかりません ({data_id})")
+        print(f"  Warning: mixed audio not found ({data_id})")
 
-    out_path = os.path.join(output_video_dir, f"GT_{data_id}.mp4")
-    print(f"  出力: {out_path}")
+    out_path = os.path.join(output_video_dir, f"novolstab_{data_id}.mp4")
+    print(f"  Output: {out_path}")
     clip.write_videofile(out_path, fps=fps, codec="libx264", audio_codec="aac", logger=None)
 
     for img in images:
@@ -181,4 +183,4 @@ for index, data_id in enumerate(target_ids):
             os.remove(img)
 
 renderer.delete()
-print(f"\n完了！ 動画保存先: {output_video_dir}")
+print(f"\nDone! Videos saved to: {output_video_dir}")
