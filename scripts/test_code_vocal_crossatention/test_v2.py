@@ -1,28 +1,28 @@
 """
 =============================================================================
-CrossAttention + PositionalEncoding モデル 推論スクリプト
+CrossAttention + PositionalEncoding Model Inference Script
 =============================================================================
-入力:
-  - wav2vec_features/{id}.npy  (399, 768) → T×768 に補間
+Input:
+  - wav2vec_features/{id}.npy  (399, 768) -> interpolated to T x 768
   - mfcc_features/{id}.npy     (240, 64)
 
-出力:
+Output:
   - predictions_crossattn_pe/{id}.pkl
       {
-          'shapecode': np.ndarray (1, 100)   ← GT から取得
+          'shapecode': np.ndarray (1, 100)   <- taken from GT
           'expcodes':  np.ndarray (240, 50)
-          'posecodes': np.ndarray (240, 9)   ← global+neck はモデル予測、jaw は GT 流用
+          'posecodes': np.ndarray (240, 9)   <- global+neck are model predictions, jaw is reused from GT
       }
 
-使い方:
-  # 単一ファイル
-  python test_crossattn_pe.py --id id15_3_1_3
+Usage:
+  # Single file
+  python test_v2.py --id id15_3_1_3
 
-  # txtファイルに書かれた全IDを一括推論
-  python test_crossattn_pe.py --txt test.txt
+  # Batch-infer all IDs listed in a txt file
+  python test_v2.py --txt test.txt
 
-  # チェックポイントを指定
-  python test_crossattn_pe.py --txt test.txt --checkpoint path/to/crossattn_pe_best_model.pth
+  # Specify a checkpoint
+  python test_v2.py --txt test.txt --checkpoint path/to/crossattn_pe_best_model.pth
 =============================================================================
 """
 
@@ -38,7 +38,7 @@ from tqdm import tqdm
 
 
 # ============================================================
-# 次元定義（train と揃える）
+# Dimension definitions
 # ============================================================
 EXP_ONLY_DIM    = 50
 POSE_NO_JAW_DIM = 6
@@ -46,7 +46,7 @@ TARGET_DIM      = EXP_ONLY_DIM + POSE_NO_JAW_DIM  # = 56
 
 
 # ============================================================
-# モデル定義（train と完全に同じ）
+# Model definition
 # ============================================================
 
 class PositionalEncoding(nn.Module):
@@ -118,7 +118,7 @@ class MusicToExpressionTransformer(nn.Module):
 
 
 # ============================================================
-# モデルロード
+# Model loading
 # ============================================================
 
 def load_model(checkpoint_path: str, device: torch.device) -> MusicToExpressionTransformer:
@@ -129,12 +129,12 @@ def load_model(checkpoint_path: str, device: torch.device) -> MusicToExpressionT
     state_dict = torch.load(checkpoint_path, map_location=device)
     model.load_state_dict(state_dict)
     model.eval()
-    print(f"モデルをロードしました: {checkpoint_path}")
+    print(f"Loaded model: {checkpoint_path}")
     return model
 
 
 # ============================================================
-# 1サンプル推論
+# Single-sample inference
 # ============================================================
 
 def infer_one(
@@ -147,7 +147,7 @@ def infer_one(
     seq_len: int = 240,
 ) -> dict:
 
-    # wav2vec 特徴（399フレーム → seq_len へ補間）
+    # wav2vec features (interpolate from 399 frames to seq_len)
     voice_feat = torch.from_numpy(
         np.load(os.path.join(wav2vec_dir, f"{data_id}.npy"))
     ).float()
@@ -160,7 +160,7 @@ def infer_one(
         ).squeeze(0).T
     )  # (240, 768)
 
-    # MFCC 特徴
+    # MFCC features
     mfcc = torch.from_numpy(
         np.load(os.path.join(mfcc_dir, f"{data_id}.npy"))
     ).float()
@@ -169,39 +169,39 @@ def infer_one(
     elif mfcc.size(0) < seq_len:
         mfcc = F.pad(mfcc, (0, 0, 0, seq_len - mfcc.size(0)), "constant", 0)
 
-    # バッチ次元を追加してデバイスへ
+    # Add batch dimension and move to device
     voice_feat = voice_feat.unsqueeze(0).to(device)  # (1, 240, 768)
     mfcc       = mfcc.unsqueeze(0).to(device)        # (1, 240, 64)
 
-    # 推論
+    # Inference
     with torch.no_grad():
         pred = model(voice_feat, mfcc)  # (1, 240, 56)
 
     pred = pred.squeeze(0).cpu().numpy()  # (240, 56)
 
-    # 56次元を分解
+    # Split the 56 dimensions apart
     expcodes    = pred[:, :EXP_ONLY_DIM]                         # (240, 50)
     global_pose = pred[:, EXP_ONLY_DIM:EXP_ONLY_DIM + 3]        # (240, 3)
     neck_pose   = pred[:, EXP_ONLY_DIM + 3:EXP_ONLY_DIM + 6]    # (240, 3)
 
-    # jaw は GT から流用
+    # Reuse jaw from GT
     flame_base = os.path.join(flame_dir, data_id)
     if os.path.exists(f"{flame_base}_pose.npy"):
-        # npy 版
+        # npy version
         pose_gt  = np.load(f"{flame_base}_pose.npy").astype(np.float32)
         jaw_pose = pose_gt[:, 6:9]  # (240, 3)
         shape    = np.load(f"{flame_base}_shape.npy").astype(np.float32) \
                    if os.path.exists(f"{flame_base}_shape.npy") \
                    else np.zeros((1, 100), dtype=np.float32)
     else:
-        # pkl 版（フォールバック）
+        # pkl version (fallback)
         with open(os.path.join(flame_dir, f"{data_id}.pkl"), "rb") as f:
             flame_data = pickle.load(f)
         pose_key = "posecodes" if "posecodes" in flame_data else "pose"
         jaw_pose = np.array(flame_data[pose_key], dtype=np.float32)[:, 6:9]
         shape    = flame_data.get("shapecode", np.zeros((1, 100), dtype=np.float32))
 
-    # posecodes を FLAME 形式 [global(3), neck(3), jaw(3)] に組み立て
+    # Assemble posecodes in FLAME format [global(3), neck(3), jaw(3)]
     posecodes = np.concatenate([global_pose, neck_pose, jaw_pose], axis=-1)  # (240, 9)
 
     return {
@@ -212,7 +212,7 @@ def infer_one(
 
 
 # ============================================================
-# 一括推論
+# Batch inference
 # ============================================================
 
 def run_inference(
@@ -245,9 +245,9 @@ def run_inference(
             errors.append((data_id, str(e)))
             print(f"\nERROR: {data_id}: {e}")
 
-    print(f"\n完了: {len(data_ids) - len(errors)}/{len(data_ids)} 件")
+    print(f"\nDone: {len(data_ids) - len(errors)}/{len(data_ids)} completed")
     if errors:
-        print(f"エラー ({len(errors)} 件):")
+        print(f"Errors ({len(errors)}):")
         for data_id, err in errors:
             print(f"  {data_id}: {err}")
 
@@ -255,25 +255,25 @@ def run_inference(
 
 
 # ============================================================
-# メイン
+# Main
 # ============================================================
 
 def main():
     parser = argparse.ArgumentParser(
-        description="CrossAttention + PE モデル 推論スクリプト"
+        description="CrossAttention + PE Model Inference Script"
     )
     parser.add_argument("--id",  type=str, default=None,
-                        help="単一サンプルの ID（例: id15_3_1_3）")
+                        help="Single sample ID (e.g. id15_3_1_3)")
     parser.add_argument("--txt", type=str, default=None,
-                        help="ID リストの txt ファイル（例: test.txt）")
+                        help="txt file containing a list of IDs (e.g. test.txt)")
     parser.add_argument("--checkpoint", type=str, default=None,
-                        help="チェックポイントのパス（省略時は自動検索）")
+                        help="Path to checkpoint (auto-detected if omitted)")
     parser.add_argument("--output_dir", type=str, default=None,
-                        help="出力先ディレクトリ（省略時は自動設定）")
+                        help="Output directory (auto-set if omitted)")
     parser.add_argument("--seq_len", type=int, default=240)
     args = parser.parse_args()
 
-    # ---- パス設定 ----
+    # ---- Path configuration ----
     current_dir      = os.path.dirname(os.path.abspath(__file__))
     dataset_base_dir = os.path.abspath(
         os.path.join(current_dir, "..", "..", "data", "SingingHead")
@@ -283,7 +283,7 @@ def main():
     mfcc_dir    = os.path.join(dataset_base_dir, "mfcc_features")
     flame_dir   = os.path.join(dataset_base_dir, "flame_npy")
 
-    # チェックポイントの自動検索
+    # Auto-detect checkpoint
     if args.checkpoint:
         checkpoint_path = args.checkpoint
     else:
@@ -291,19 +291,19 @@ def main():
             current_dir, "..", "..", "checkpoints", "crossattn_pe_best_model.pth"
         )
     assert os.path.exists(checkpoint_path), \
-        f"チェックポイントが見つかりません: {checkpoint_path}"
+        f"Checkpoint not found: {checkpoint_path}"
 
-    # 出力先
+    # Output destination
     output_dir = args.output_dir or os.path.join(
         dataset_base_dir, "predictions", "predictions_crossattn_pe"
     )
 
-    # ---- デバイス・モデルのロード ----
+    # ---- Load device and model ----
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Device: {device}")
     model = load_model(checkpoint_path, device)
 
-    # ---- 推論対象 ID の収集 ----
+    # ---- Collect target IDs for inference ----
     if args.id:
         data_ids = [args.id]
     elif args.txt:
@@ -312,23 +312,23 @@ def main():
         with open(txt_path, "r", encoding="utf-8") as f:
             data_ids = [line.strip() for line in f if line.strip()]
     else:
-        parser.error("--id または --txt のどちらかを指定してください")
+        parser.error("Please specify either --id or --txt")
 
-    print(f"推論対象: {len(data_ids)} 件")
-    print(f"出力先  : {output_dir}")
+    print(f"Inference targets: {len(data_ids)} samples")
+    print(f"Output directory : {output_dir}")
 
-    # ---- 推論実行 ----
+    # ---- Run inference ----
     run_inference(
         data_ids, wav2vec_dir, mfcc_dir, flame_dir,
         output_dir, model, device, args.seq_len
     )
 
-    # ---- 出力サンプルの確認 ----
+    # ---- Check a sample output ----
     sample_path = os.path.join(output_dir, f"{data_ids[0]}.pkl")
     if os.path.exists(sample_path):
         with open(sample_path, "rb") as f:
             sample = pickle.load(f)
-        print(f"\nサンプル確認 ({data_ids[0]}):")
+        print(f"\nSample check ({data_ids[0]}):")
         print(f"  shapecode : {sample['shapecode'].shape}")
         print(f"  expcodes  : {sample['expcodes'].shape}  "
               f"mean={sample['expcodes'].mean():.4f}")
