@@ -1,34 +1,38 @@
 """
 =============================================================================
-Concatenation-based Model エンドツーエンド スループット計測スクリプト
+Concatenation-based Model End-to-End Throughput Measurement Script
 =============================================================================
-目的:
-  事前計算済みの特徴量(.npy)を使う test.py とは異なり、
-  「未知の生音声(.wav)が入力された場合」を想定し、
-  以下の処理をすべて含めた end-to-end のスループットを計測する。
+Purpose:
+  Unlike test.py, which uses precomputed features (.npy), this script
+  assumes the scenario where "unseen raw audio (.wav) is given as input"
+  and measures end-to-end throughput that includes all of the following
+  steps:
 
-    生のvocal音声(.wav)  --[wav2vec 2.0]-->  vocal特徴 (T, 768)
-    生のBGM音声(.wav)    --[Librosa MFCC]-->  BGM特徴   (T, 64)
-    vocal特徴 + BGM特徴  --[Concatenation-based Model]-->  FLAMEパラメータ (T, 56)
+    Raw vocal audio (.wav)  --[wav2vec 2.0]-->  vocal features (T, 768)
+    Raw BGM audio (.wav)    --[Librosa MFCC]-->  BGM features   (T, 64)
+    vocal features + BGM features  --[Concatenation-based Model]-->  FLAME parameters (T, 56)
 
-  この一連の処理にかかる時間を計測し、SingingHead(UniSinger)論文の
-  FPS指標と条件を揃えて比較できるよう、以下をコマンドライン引数で
-  変更できるようにしている。
+  This script measures the time taken for this entire pipeline, and
+  exposes the following as command-line arguments so conditions can be
+  matched with the FPS metric reported in the SingingHead (UniSinger)
+  paper for comparison:
 
-    --n_samples          : 計測に使うテストサンプル数
-    --n_runs_per_sample   : 各サンプルにつき何回計測するか(平均を取るため)
-    --seq_len             : 出力フレーム数(SingingHeadは240フレーム=8秒, 30fps)
-    --device               : cuda または cpu
+    --n_samples          : number of test samples used for measurement
+    --n_runs_per_sample   : how many times to measure per sample (for averaging)
+    --seq_len             : number of output frames (SingingHead uses 240 frames = 8s at 30fps)
+    --device               : cuda or cpu
 
-使い方:
-  # デフォルト設定(20サンプル、10回試行、240フレーム、GPU)
+Usage:
+  # Default settings (20 samples, 10 runs, 240 frames, GPU)
   python e2e_throughput_concat.py
 
-  # SingingHead論文のTable II同様に、複数のフレーム数条件で比較したい場合
+  # To compare across multiple frame-count conditions, as in Table II of
+  # the SingingHead paper
   python e2e_throughput_concat.py --seq_len 240
-  python e2e_throughput_concat.py --seq_len 480   # 16秒相当のシーケンスで比較
+  python e2e_throughput_concat.py --seq_len 480   # compare with a 16-second-equivalent sequence
 
-  # サンプル数を変えて比較する場合(UniSingerのn=1,10,30に相当する検証)
+  # To compare across different sample counts
+  # (corresponds to UniSinger's validation with n=1, 10, 30)
   python e2e_throughput_concat.py --n_samples 1
   python e2e_throughput_concat.py --n_samples 10
   python e2e_throughput_concat.py --n_samples 30
@@ -53,34 +57,34 @@ from transformers import Wav2Vec2Model, Wav2Vec2FeatureExtractor
 
 
 # ============================================================
-# パス設定(実際の環境に合わせて変更してください)
+# Path configuration
 # ============================================================
 DATASET_BASE_DIR = Path("/home/nagao2/src/Visualization/data/SingingHead")
 CHECKPOINT_DIR    = Path("/home/nagao2/src/Visualization/checkpoints")
 
-# 生音声(.wav)が置かれているディレクトリ
-# wav2vec_extract.py の INPUT_DIR = audio_seqs、
-# extract_mfcc.py の BGM_DIR = bgm_seqs に対応
+# Directories containing the raw (.wav) audio files
+# Corresponds to INPUT_DIR = audio_seqs in wav2vec_extract.py and
+# BGM_DIR = bgm_seqs in extract_mfcc.py
 VOCAL_WAV_DIR = DATASET_BASE_DIR / "audio_seqs"
 BGM_WAV_DIR   = DATASET_BASE_DIR / "bgm_seqs"
 
 TEST_TXT = DATASET_BASE_DIR / "test.txt"
 
-# Concatenation-based Model のチェックポイント(test.py と同じもの)
+# Checkpoint for the Concatenation-based Model
 CONCAT_CKPT = CHECKPOINT_DIR / "audio_bgm_best_model_ep100.pth"
 
 WAV2VEC_MODEL_NAME = "facebook/wav2vec2-base-960h"
 N_MFCC = 64
 
-# BGMファイル名の末尾(extract_mfcc.py の命名規則に合わせる: "xxx_bgm.wav")
+# BGM filename suffix (matches the naming convention in extract_mfcc.py: "xxx_bgm.wav")
 BGM_SUFFIX = "_bgm.wav"
 VOCAL_SUFFIX = ".wav"
 
-TARGET_DIM = 56  # 50(expression) + 3(global) + 3(neck)
+TARGET_DIM = 56  # 50 (expression) + 3 (global) + 3 (neck)
 
 
 # ============================================================
-# モデル定義(test.py と完全に同一)
+# Model definition
 # ============================================================
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -119,14 +123,12 @@ class MusicToExpressionTransformer(nn.Module):
 
 
 # ============================================================
-# 特徴抽出(生波形 -> vocal特徴 / BGM特徴)
-# extract_mfcc.py, wav2vec_extract.py のロジックをそのまま利用
+# Feature extraction (raw waveform -> vocal features / BGM features)
 # ============================================================
 class OnlineFeatureExtractor:
     """
-    生の.wavファイルから、その場でvocal特徴(wav2vec2.0)と
-    BGM特徴(MFCC, Librosa)を抽出するクラス。
-    エンドツーエンドのスループット計測のため、抽出処理自体も計測対象に含める。
+    Extracts vocal features (wav2vec 2.0) and BGM features (MFCC, Librosa)
+    on the fly from raw .wav files.
     """
 
     def __init__(self, device: torch.device):
@@ -138,7 +140,7 @@ class OnlineFeatureExtractor:
 
     @staticmethod
     def _resize_feature(feat: np.ndarray, target_len: int) -> np.ndarray:
-        """extract_mfcc.py の resize_feature と同じ線形補間"""
+        """Same linear interpolation as resize_feature in extract_mfcc.py"""
         old_len = feat.shape[0]
         if old_len == target_len:
             return feat
@@ -151,8 +153,8 @@ class OnlineFeatureExtractor:
 
     def extract_vocal_feature(self, wav_path: str, seq_len: int) -> torch.Tensor:
         """
-        生のvocal音声(.wav) -> wav2vec2.0特徴 (1, seq_len, 768)
-        wav2vec_extract.py の extract_features 相当の処理。
+        Raw vocal audio (.wav) -> wav2vec 2.0 features (1, seq_len, 768)
+        Equivalent to the extract_features processing in wav2vec_extract.py.
         """
         wav, sr = torchaudio.load(wav_path)
         if sr != 16000:
@@ -166,7 +168,7 @@ class OnlineFeatureExtractor:
         with torch.no_grad():
             features = self.w2v_model(**inputs).last_hidden_state  # (1, T_raw, 768)
 
-        # test.py 側と同様、seq_len に線形補間する
+        # Interpolate to seq_len, same as on the test.py side
         features = features.squeeze(0)  # (T_raw, 768)
         features = (
             F.interpolate(
@@ -178,8 +180,9 @@ class OnlineFeatureExtractor:
 
     def extract_bgm_feature(self, wav_path: str, seq_len: int) -> torch.Tensor:
         """
-        生のBGM音声(.wav) -> MFCC特徴 (1, seq_len, 64)
-        extract_mfcc.py の処理と同一(hop_length = sr/30, 240フレーム基準の補間)。
+        Raw BGM audio (.wav) -> MFCC features (1, seq_len, 64)
+        Identical processing to extract_mfcc.py
+        (hop_length = sr/30, interpolation based on a 240-frame reference).
         """
         y, sr = librosa.load(wav_path, sr=None)
         hop_length = int(sr / 30)
@@ -191,7 +194,7 @@ class OnlineFeatureExtractor:
 
 
 # ============================================================
-# パラメータ数カウント
+# Parameter counting
 # ============================================================
 def count_params(model: nn.Module):
     total = sum(p.numel() for p in model.parameters())
@@ -200,8 +203,8 @@ def count_params(model: nn.Module):
 
 
 # ============================================================
-# エンドツーエンド推論時間計測
-#   (特徴抽出 + モデル推論の両方を含めて計測する)
+# End-to-end inference time measurement
+#   (measures both feature extraction and model inference)
 # ============================================================
 def measure_e2e_throughput(
     model: nn.Module,
@@ -223,7 +226,7 @@ def measure_e2e_throughput(
             skipped.append(data_id)
             continue
 
-        # ---- warmup(特徴抽出 + モデル推論の両方を含む) ----
+        # ---- Warmup (includes both feature extraction and model inference) ----
         for _ in range(3):
             v_feat = extractor.extract_vocal_feature(str(vocal_path), seq_len)
             b_feat = extractor.extract_bgm_feature(str(bgm_path), seq_len)
@@ -232,7 +235,7 @@ def measure_e2e_throughput(
         if device.type == "cuda":
             torch.cuda.synchronize()
 
-        # ---- 計測(特徴抽出 + モデル推論を1セットとして計測) ----
+        # ---- Measurement (feature extraction + model inference measured as one unit) ----
         start = time.time()
         for _ in range(n_runs_per_sample):
             v_feat = extractor.extract_vocal_feature(str(vocal_path), seq_len)
@@ -247,29 +250,29 @@ def measure_e2e_throughput(
         all_times.append(avg_time_this_sample)
 
     if skipped:
-        print(f"警告: {len(skipped)} 件のファイルが見つからずスキップされました。"
-              f"(例: {skipped[:3]})")
+        print(f"Warning: {len(skipped)} file(s) were not found and were skipped. "
+              f"(e.g. {skipped[:3]})")
 
     return np.mean(all_times), np.std(all_times), len(all_times)
 
 
 # ============================================================
-# メイン
+# Main
 # ============================================================
 def main():
     parser = argparse.ArgumentParser(
-        description="Concatenation-based Model のエンドツーエンド スループット計測"
+        description="End-to-end throughput measurement for the Concatenation-based Model"
     )
     parser.add_argument("--n_samples", type=int, default=20,
-                        help="計測に使用するテストサンプル数")
+                        help="Number of test samples to use for measurement")
     parser.add_argument("--n_runs_per_sample", type=int, default=10,
-                        help="各サンプルにつき何回計測するか")
+                        help="How many times to measure per sample")
     parser.add_argument("--seq_len", type=int, default=240,
-                        help="出力フレーム数(SingingHead標準は240=8秒,30fps)")
+                        help="Number of output frames (SingingHead standard is 240 = 8s at 30fps)")
     parser.add_argument("--seed", type=int, default=42,
-                        help="サンプル抽出のランダムシード")
+                        help="Random seed for sample selection")
     parser.add_argument("--device", type=str, default=None,
-                        help="cuda または cpu(省略時は自動判定)")
+                        help="cuda or cpu (auto-detected if omitted)")
     args = parser.parse_args()
 
     device = torch.device(
@@ -280,24 +283,24 @@ def main():
           f"n_runs_per_sample={args.n_runs_per_sample}, "
           f"seq_len={args.seq_len}, seed={args.seed}")
 
-    # ---- テストセットからサンプルIDをランダムに取得 ----
-    assert TEST_TXT.exists(), f"test.txt が見つかりません: {TEST_TXT}"
+    # ---- Randomly sample IDs from the test set ----
+    assert TEST_TXT.exists(), f"test.txt not found: {TEST_TXT}"
     with open(TEST_TXT, "r", encoding="utf-8") as f:
         all_test_ids = [line.strip() for line in f if line.strip()]
 
     random.seed(args.seed)
     sample_ids = random.sample(all_test_ids, min(args.n_samples, len(all_test_ids)))
-    print(f"計測に使用するサンプル数: {len(sample_ids)} / {len(all_test_ids)}")
+    print(f"Number of samples used for measurement: {len(sample_ids)} / {len(all_test_ids)}")
 
-    # ---- 特徴抽出器の準備(wav2vec2.0のロード) ----
+    # ---- Prepare the feature extractor (load wav2vec 2.0) ----
     extractor = OnlineFeatureExtractor(device)
 
-    # ---- モデルのロード ----
+    # ---- Load the model ----
     model = MusicToExpressionTransformer(
         voice_dim=768, bgm_dim=64, exp_dim=TARGET_DIM,
         d_model=256, nhead=4, num_layers=4,
     ).to(device)
-    assert CONCAT_CKPT.exists(), f"チェックポイントが見つかりません: {CONCAT_CKPT}"
+    assert CONCAT_CKPT.exists(), f"Checkpoint not found: {CONCAT_CKPT}"
     state_dict = torch.load(str(CONCAT_CKPT), map_location=device)
     model.load_state_dict(state_dict)
 
@@ -308,7 +311,7 @@ def main():
     size_mb = os.path.getsize(CONCAT_CKPT) / (1024 ** 2)
     print(f"Model size: {size_mb:.2f} MB")
 
-    # ---- エンドツーエンドのスループット計測 ----
+    # ---- Measure end-to-end throughput ----
     avg_time, std_time, n_used = measure_e2e_throughput(
         model, extractor, sample_ids, device,
         seq_len=args.seq_len, n_runs_per_sample=args.n_runs_per_sample,
@@ -321,9 +324,9 @@ def main():
     print(f"Throughput: {throughput:.1f} fps")
     print(f"Real-time capable (>=30fps): {'Yes' if throughput >= 30 else 'No'}")
 
-    # SingingHead(UniSinger)論文のFPSとの参考比較
-    print(f"\n[参考] SingingHead (UniSinger) 論文報告値: 50.849 fps")
-    print(f"[参考] Think2Sing 論文報告値: 200+ fps (motion subtitle生成を除く)")
+    # Reference comparison with the SingingHead (UniSinger) paper's reported FPS
+    print(f"\n[Reference] SingingHead (UniSinger) paper reported value: 50.849 fps")
+    print(f"[Reference] Think2Sing paper reported value: 200+ fps (excluding motion subtitle generation)")
 
 
 if __name__ == "__main__":
