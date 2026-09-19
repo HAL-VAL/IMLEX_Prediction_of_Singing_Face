@@ -1,25 +1,21 @@
 """
-FLAME表情推定モデルの評価スクリプト
-4モデルを切り替えて評価できる引数対応版（BAスコア対応版）
+FLAME Expression Estimation Model Evaluation Script
+Argument-driven version that can switch between 4 models (with BA score support)
 
-使い方:
+Usage:
   python evaluation.py --pred_dir predictions_crossattn_volstab --bgm_dir /path/to/bgm_seqs
 """
 
 """
-FLAME表情推定モデルの評価スクリプト
-4モデルを切り替えて評価できる引数対応版
+FLAME Expression Estimation Model Evaluation Script
 
-使い方:
-  python evaluation.py --pred_dir predictions_vol
-  python evaluation.py --pred_dir predictions_MFCC
+Usage:
   python evaluation.py --pred_dir predictions_audio_bgm
   python evaluation.py --pred_dir predictions_crossattn
   python evaluation.py --pred_dir predictions_crossattn_pe
   python evaluation.py --pred_dir predictions_crossattn_pe_volstab
   python evaluation.py --pred_dir predictions_crossattn_volstab
-  python evaluation.py --pred_dir predictions_nocrossattn-nojaw-seed0
-  python evaluation.py --pred_dir predictions_crossattn-jaw-seed0
+
 """
 
 import os
@@ -32,18 +28,15 @@ from scipy.signal import argrelextrema
 from tqdm import tqdm
 
 # ==========================================
-# 次元定義
+# Dimension definitions
 # ==========================================
 EXP_ONLY_DIM    = 50
 POSE_NO_JAW_DIM = 6
 
 # ==========================================
-# BAスコア計算関数（UniSingerのmetric_3d/metrics.pyのnumpy版）
-# 参照元: https://github.com/lisiyao21/Bailando
+# BA score calculation functions (numpy port of UniSinger's metric_3d/metrics.py)
+# Source: https://github.com/lisiyao21/Bailando
 # ==========================================
-
-
-
 
 
 def calc_db(motion_seq):
@@ -71,29 +64,29 @@ def BA(music_beats, motion_beats):
 
 
 # ==========================================
-# コマンドライン引数
+# Command-line arguments
 # ==========================================
-parser = argparse.ArgumentParser(description="FLAME表情推定モデルの評価スクリプト")
+parser = argparse.ArgumentParser(description="FLAME Expression Estimation Model Evaluation Script")
 parser.add_argument("--pred_dir", type=str, required=True,
-                    help="推論結果のサブフォルダ名または絶対パス")
+                    help="Subfolder name or absolute path of the prediction results")
 parser.add_argument("--output_csv", type=str, default=None,
-                    help="CSV出力パス（省略時は pred_dir 名から自動生成）")
+                    help="CSV output path (auto-generated from pred_dir name if omitted)")
 parser.add_argument("--dataset_dir", type=str,
                     default=r"D:\MasterDataset\SingingHead\Dataset",
-                    help="GT flame_seqs と test.txt があるデータセットディレクトリ")
+                    help="Dataset directory containing GT flame_seqs and test.txt")
 parser.add_argument("--pred_root", type=str, default=None,
-                    help="predictions フォルダの絶対パス")
+                    help="Absolute path of the predictions folder")
 parser.add_argument("--txt", type=str, default="test.txt",
-                    help="評価対象IDリスト（デフォルト: test.txt）")
+                    help="ID list to evaluate (default: test.txt)")
 parser.add_argument("--beat_cache_dir", type=str, default=None,
-                    help="precompute_audio_beats.py で作成したビートキャッシュ(.npy)のフォルダ。"
-                         "省略時は dataset_dir/beat_cache を使用")
+                    help="Folder containing the beat cache (.npy) created by precompute_audio_beats.py. "
+                         "If omitted, dataset_dir/beat_cache is used")
 parser.add_argument("--skip_ba", action="store_true",
-                    help="BAスコアの計算をスキップする")
+                    help="Skip computing the BA score")
 args = parser.parse_args()
 
 # ==========================================
-# パス設定
+# Path configuration
 # ==========================================
 dataset_base_dir = args.dataset_dir
 gt_flame_dir     = os.path.join(dataset_base_dir, "flame_seqs")
@@ -116,18 +109,18 @@ output_csv_path = args.output_csv or os.path.join(
 test_txt_path = args.txt if os.path.isabs(args.txt) else os.path.join(dataset_base_dir, args.txt)
 
 # ==========================================
-# test.txt の読み込み
+# Read test.txt
 # ==========================================
 with open(test_txt_path, "r") as f:
     data_ids = [line.strip().replace(".pkl", "") for line in f if line.strip()]
 
-print(f"モデル: {pred_dir_name}")
-print(f"評価対象: {len(data_ids)} 件")
-print(f"CSV出力先: {output_csv_path}")
+print(f"Model: {pred_dir_name}")
+print(f"Evaluation targets: {len(data_ids)} samples")
+print(f"CSV output path: {output_csv_path}")
 
 
 # ==========================================
-# 誤差計算ループ
+# Error computation loop
 # ==========================================
 results = []
 errors  = []
@@ -192,7 +185,7 @@ for data_id in tqdm(data_ids, desc="Evaluating"):
         pred_accel = np.diff(pred_all, n=2, axis=0)
         jitter = np.mean(pred_accel ** 2)
 
-        # ---- BA (Beat Align Score)：事前計算済みキャッシュを利用 ----
+        # ---- BA (Beat Align Score): uses a precomputed cache ----
         ba_pose = np.nan
         if not args.skip_ba:
             beat_cache_path = os.path.join(beat_cache_dir, f"{data_id}.npy")
@@ -232,10 +225,10 @@ for data_id in tqdm(data_ids, desc="Evaluating"):
         print(f"\nERROR: {data_id}: {e}")
 
 # ==========================================
-# 集計
+# Aggregation
 # ==========================================
 if not results:
-    print("評価できたサンプルが0件です。パスを確認してください。")
+    print("0 samples were successfully evaluated. Please check the paths.")
 else:
     keys = [
         "mse_total", "mae_total", "mse_exp", "mse_global", "mse_neck",
@@ -244,9 +237,9 @@ else:
     ]
 
     print(f"\n{'='*60}")
-    print(f"評価結果サマリー: {pred_dir_name} ({len(results)} 件）")
+    print(f"Evaluation Summary: {pred_dir_name} ({len(results)} samples)")
     print(f"{'='*60}")
-    print(f"{'指標':<20} {'平均':>10} {'最小':>10} {'最大':>10}")
+    print(f"{'Metric':<20} {'Mean':>10} {'Min':>10} {'Max':>10}")
     print(f"{'-'*60}")
 
     for key in keys:
@@ -259,9 +252,9 @@ else:
     print(f"{'='*60}")
 
     if errors:
-        print(f"\nスキップしたサンプル: {len(errors)} 件")
+        print(f"\nSkipped samples: {len(errors)}")
     if ba_errors:
-        print(f"BAスコアを計算できなかったサンプル: {len(ba_errors)} 件（BGM音源が見つからない等）")
+        print(f"Samples for which the BA score could not be computed: {len(ba_errors)} (e.g. BGM audio source not found)")
 
     all_keys = ["data_id", "mse_total", "mae_total", "mse_exp", "mae_exp",
                 "mse_global", "mae_global", "mse_neck", "mae_neck",
@@ -273,13 +266,13 @@ else:
         writer.writeheader()
         writer.writerows(results)
 
-    print(f"\nCSV保存完了: {output_csv_path}")
+    print(f"\nCSV saved: {output_csv_path}")
 
-    print(f"\n--- ワースト10件（mse_total が大きい順）---")
+    print(f"\n--- Worst 10 (sorted by descending mse_total) ---")
     sorted_results = sorted(results, key=lambda x: x["mse_total"], reverse=True)
     for i, r in enumerate(sorted_results[:10]):
         print(f"  {i+1:2d}. {r['data_id']:<25} mse_total={r['mse_total']:.6f}")
 
-    print(f"\n--- ベスト10件（mse_total が小さい順）---")
+    print(f"\n--- Best 10 (sorted by ascending mse_total) ---")
     for i, r in enumerate(sorted_results[-10:][::-1]):
         print(f"  {i+1:2d}. {r['data_id']:<25} mse_total={r['mse_total']:.6f}")
