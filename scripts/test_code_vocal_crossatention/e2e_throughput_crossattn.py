@@ -1,24 +1,25 @@
 """
 =============================================================================
-Cross-Attention-based Model エンドツーエンド スループット計測スクリプト
+Cross-Attention-based Model End-to-End Throughput Measurement Script
 =============================================================================
-目的:
-  事前計算済みの特徴量(.npy)を使う test_add_volstab.py とは異なり、
-  「未知の生音声(.wav)が入力された場合」を想定し、
-  以下の処理をすべて含めた end-to-end のスループットを計測する。
+Purpose:
+  Assuming the scenario where "unseen raw audio (.wav) is given as input",
+  measures end-to-end throughput that includes all of the following steps:
 
-    生のvocal音声(.wav)  --[wav2vec 2.0]-->  vocal特徴 (T, 768)
-    生のBGM音声(.wav)    --[Librosa MFCC]-->  BGM特徴   (T, 64)
-    vocal特徴 + BGM特徴  --[Cross-Attention-based Model]-->  FLAMEパラメータ (T, 56)
+    Raw vocal audio (.wav)  --[wav2vec 2.0]-->  vocal features (T, 768)
+    Raw BGM audio (.wav)    --[Librosa MFCC]-->  BGM features   (T, 64)
+    vocal features + BGM features  --[Cross-Attention-based Model]-->  FLAME parameters (T, 56)
 
-  e2e_throughput_concat.py (Concatenation-based Model版) と条件を揃えて
-  実行することで、両モデルを公平に比較できる。
+  Running this under the same conditions as e2e_throughput_concat.py
+  (the Concatenation-based Model version) allows a fair comparison
+  between the two models.
 
-使い方:
-  # デフォルト設定(20サンプル、10回試行、240フレーム、GPU)
+Usage:
+  # Default settings (20 samples, 10 runs, 240 frames, GPU)
   python e2e_throughput_crossattn.py
 
-  # サンプル数・フレーム数を変えて比較(SingingHead論文との比較用)
+  # Compare across different sample counts / frame counts
+  # (for comparison with the SingingHead paper)
   python e2e_throughput_crossattn.py --n_samples 1
   python e2e_throughput_crossattn.py --n_samples 30
   python e2e_throughput_crossattn.py --seq_len 480
@@ -42,18 +43,18 @@ from transformers import Wav2Vec2Model, Wav2Vec2FeatureExtractor
 
 
 # ============================================================
-# パス設定(実際の環境に合わせて変更してください)
+# Path configuration
 # ============================================================
 DATASET_BASE_DIR = Path("/home/nagao2/src/Visualization/data/SingingHead")
 CHECKPOINT_DIR    = Path("/home/nagao2/src/Visualization/checkpoints")
 
-# 生音声(.wav)が置かれているディレクトリ(Concatenation版と共通)
+# Directories containing the raw (.wav) audio files (shared with the Concatenation version)
 VOCAL_WAV_DIR = DATASET_BASE_DIR / "audio_seqs"
 BGM_WAV_DIR   = DATASET_BASE_DIR / "bgm_seqs"
 
 TEST_TXT = DATASET_BASE_DIR / "test.txt"
 
-# Cross-Attention-based Model のチェックポイント(test_add_volstab.py と同じもの)
+# Checkpoint for the Cross-Attention-based Model
 CROSSATTN_CKPT = CHECKPOINT_DIR / "crossattn_pe_volstab_best_model.pth"
 
 WAV2VEC_MODEL_NAME = "facebook/wav2vec2-base-960h"
@@ -68,7 +69,7 @@ TARGET_DIM      = EXP_ONLY_DIM + POSE_NO_JAW_DIM  # = 56
 
 
 # ============================================================
-# モデル定義(test_add_volstab.py と完全に同一)
+# Model definition
 # ============================================================
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000):
@@ -129,8 +130,8 @@ class MusicToExpressionTransformer(nn.Module):
 
 
 # ============================================================
-# 特徴抽出(生波形 -> vocal特徴 / BGM特徴)
-# e2e_throughput_concat.py の OnlineFeatureExtractor と同一処理
+# Feature extraction (raw waveform -> vocal features / BGM features)
+# Identical processing to OnlineFeatureExtractor in e2e_throughput_concat.py
 # ============================================================
 class OnlineFeatureExtractor:
     def __init__(self, device: torch.device):
@@ -185,7 +186,7 @@ class OnlineFeatureExtractor:
 
 
 # ============================================================
-# パラメータ数カウント
+# Parameter counting
 # ============================================================
 def count_params(model: nn.Module):
     total = sum(p.numel() for p in model.parameters())
@@ -194,7 +195,7 @@ def count_params(model: nn.Module):
 
 
 # ============================================================
-# エンドツーエンド推論時間計測
+# End-to-end inference time measurement
 # ============================================================
 def measure_e2e_throughput(
     model: nn.Module,
@@ -216,7 +217,7 @@ def measure_e2e_throughput(
             skipped.append(data_id)
             continue
 
-        # ---- warmup ----
+        # ---- Warmup ----
         for _ in range(3):
             v_feat = extractor.extract_vocal_feature(str(vocal_path), seq_len)
             b_feat = extractor.extract_bgm_feature(str(bgm_path), seq_len)
@@ -225,7 +226,7 @@ def measure_e2e_throughput(
         if device.type == "cuda":
             torch.cuda.synchronize()
 
-        # ---- 計測 ----
+        # ---- Measurement ----
         start = time.time()
         for _ in range(n_runs_per_sample):
             v_feat = extractor.extract_vocal_feature(str(vocal_path), seq_len)
@@ -240,30 +241,30 @@ def measure_e2e_throughput(
         all_times.append(avg_time_this_sample)
 
     if skipped:
-        print(f"警告: {len(skipped)} 件のファイルが見つからずスキップされました。"
-              f"(例: {skipped[:3]})")
+        print(f"Warning: {len(skipped)} file(s) were not found and were skipped. "
+              f"(e.g. {skipped[:3]})")
 
     return np.mean(all_times), np.std(all_times), len(all_times)
 
 
 # ============================================================
-# メイン
+# Main
 # ============================================================
 def main():
     parser = argparse.ArgumentParser(
-        description="Cross-Attention-based Model のエンドツーエンド スループット計測"
+        description="End-to-end throughput measurement for the Cross-Attention-based Model"
     )
     parser.add_argument("--n_samples", type=int, default=20,
-                        help="計測に使用するテストサンプル数")
+                        help="Number of test samples to use for measurement")
     parser.add_argument("--n_runs_per_sample", type=int, default=10,
-                        help="各サンプルにつき何回計測するか")
+                        help="How many times to measure per sample")
     parser.add_argument("--seq_len", type=int, default=240,
-                        help="出力フレーム数(SingingHead標準は240=8秒,30fps)")
+                        help="Number of output frames (SingingHead standard is 240 = 8s at 30fps)")
     parser.add_argument("--seed", type=int, default=42,
-                        help="サンプル抽出のランダムシード"
-                             "(Concatenation版と同じ値にすることで同一サンプルで比較可能)")
+                        help="Random seed for sample selection "
+                             "(use the same value as the Concatenation version to compare on identical samples)")
     parser.add_argument("--device", type=str, default=None,
-                        help="cuda または cpu(省略時は自動判定)")
+                        help="cuda or cpu (auto-detected if omitted)")
     args = parser.parse_args()
 
     device = torch.device(
@@ -274,25 +275,25 @@ def main():
           f"n_runs_per_sample={args.n_runs_per_sample}, "
           f"seq_len={args.seq_len}, seed={args.seed}")
 
-    # ---- テストセットからサンプルIDをランダムに取得 ----
-    assert TEST_TXT.exists(), f"test.txt が見つかりません: {TEST_TXT}"
+    # ---- Randomly sample IDs from the test set ----
+    assert TEST_TXT.exists(), f"test.txt not found: {TEST_TXT}"
     with open(TEST_TXT, "r", encoding="utf-8") as f:
         all_test_ids = [line.strip() for line in f if line.strip()]
 
     random.seed(args.seed)
     sample_ids = random.sample(all_test_ids, min(args.n_samples, len(all_test_ids)))
-    print(f"計測に使用するサンプル数: {len(sample_ids)} / {len(all_test_ids)}")
-    print(f"選ばれたサンプル: {sample_ids}")
+    print(f"Number of samples used for measurement: {len(sample_ids)} / {len(all_test_ids)}")
+    print(f"Selected samples: {sample_ids}")
 
-    # ---- 特徴抽出器の準備(wav2vec2.0のロード) ----
+    # ---- Prepare the feature extractor (load wav2vec 2.0) ----
     extractor = OnlineFeatureExtractor(device)
 
-    # ---- モデルのロード ----
+    # ---- Load the model ----
     model = MusicToExpressionTransformer(
         voice_dim=768, bgm_dim=64, exp_dim=TARGET_DIM,
         d_model=256, nhead=4, num_layers=4,
     ).to(device)
-    assert CROSSATTN_CKPT.exists(), f"チェックポイントが見つかりません: {CROSSATTN_CKPT}"
+    assert CROSSATTN_CKPT.exists(), f"Checkpoint not found: {CROSSATTN_CKPT}"
     state_dict = torch.load(str(CROSSATTN_CKPT), map_location=device)
     model.load_state_dict(state_dict)
 
@@ -303,7 +304,7 @@ def main():
     size_mb = os.path.getsize(CROSSATTN_CKPT) / (1024 ** 2)
     print(f"Model size: {size_mb:.2f} MB")
 
-    # ---- エンドツーエンドのスループット計測 ----
+    # ---- Measure end-to-end throughput ----
     avg_time, std_time, n_used = measure_e2e_throughput(
         model, extractor, sample_ids, device,
         seq_len=args.seq_len, n_runs_per_sample=args.n_runs_per_sample,
@@ -316,8 +317,8 @@ def main():
     print(f"Throughput: {throughput:.1f} fps")
     print(f"Real-time capable (>=30fps): {'Yes' if throughput >= 30 else 'No'}")
 
-    print(f"\n[参考] SingingHead (UniSinger) 論文報告値: 50.849 fps")
-    print(f"[参考] Think2Sing 論文報告値: 200+ fps (motion subtitle生成を除く)")
+    print(f"\n[Reference] SingingHead (UniSinger) paper reported value: 50.849 fps")
+    print(f"[Reference] Think2Sing paper reported value: 200+ fps (excluding motion subtitle generation)")
 
 
 if __name__ == "__main__":
