@@ -23,12 +23,52 @@ The FLAME parameters include **facial expressions (expression)** and **head and 
 
 In this study, these parameters are used as prediction targets, while **jaw pose is excluded from the prediction target**.
 
-## Contents
+## Overview
 
-- Training scripts
-- Inference scripts
-- Feature extraction scripts (wav2vec 2.0, MFCC)
-- Evaluation scripts
+This repository implements two models for predicting singing facial motions from musical features: a Concatenation-based Model and a Cross-Attention-based Model.
+
+Both models take vocal audio and BGM as inputs and predict FLAME facial parameters consisting of 50 expression parameters and 6 head/neck pose parameters.
+
+### Concatenation-based Model
+
+<img src="readme_pic/architecture_concat.png" width="45%">
+
+The vocal and BGM features are projected into the same feature space and
+concatenated before being processed by the Transformer.
+
+### Cross-Attention-based Model
+
+<img src="readme_pic/architecture_crossattn.png" width="45%">
+
+The vocal features are used as queries, while the BGM features are used as keys and values in the cross-attention module. 
+
+
+Ablation experiments are conducted to investigate the effects of **Positional Encoding (PE)** and the **Volume-based Stability Loss (VolStab)** in the loss function on prediction accuracy.
+
+| Model | Positional Encoding | Volume-based Stability Loss | Training Script |
+|---|:---:|:---:|---|
+| Concatenation-based | ✓ |  | `scripts/train_audio_bgm.py` |
+| Concatenation-based | ✓ | ✓ | `scripts/train_audio_bgm_volstab.py` |
+| Cross-Attention-based |  |  | `scripts/train_crossattn.py` |
+| Cross-Attention-based | ✓ |  | `scripts/train_crossattn_pe.py` |
+| Cross-Attention-based |  | ✓ | `scripts/train_crossattn_volstab.py` |
+| Cross-Attention-based | ✓ | ✓ | `scripts/train_crossattn_pe_volstab.py` |
+
+
+## Repository Structure
+
+```
+IMLEX_Prediction_of_Singing_Face/
+├── FLAME_PyTorch/                 # FLAME model
+├── predictions/                   # Directory for storing prediction results
+├── rendering_result/              # Rendered videos of prediction results
+├── scripts/                       # Scripts for training, inference, and feature extraction
+├── calculate_model_performance.py # Utility for measuring model size, number of parameters, and throughput
+├── evaluation.py                  # Quantitative evaluation (MSE, MAE, PPE, velocity error, jitter, and Beat Align score)
+├── output_mixedwav.py             # Mixes vocal and BGM audio to create audio for rendered videos
+├── rendering.py                   # Outputs predicted FLAME sequences as MP4 videos with audio
+└── requirements.txt               # Python dependencies
+```
 
 ### Citation
 ```bibtex
@@ -37,5 +77,18 @@ In this study, these parameters are used as prediction targets, while **jaw pose
   author={Wu, Sijing and Li, Yunhao and Zhang, Weitian and Jia, Jun and Zhu, Yucheng and Yan, Yichao and Zhai, Guangtao and Yang, Xiaokang},
   journal={arXiv preprint arXiv:2312.04369},
   year={2023}
+}
+@article{chung2025audio2face,
+  title={Audio2face-3d: Audio-driven realistic facial animation for digital avatars},
+  author={Chung, Chaeyeon and Fedorov, Ilya and Huang, Michael and Karmanov, Aleksey and Korobchenko, Dmitry and Ribera, Roger and Seol, Yeongho and others},
+  journal={arXiv preprint arXiv:2508.16401},
+  year={2025}
+}
+@inproceedings{siyao2022bailando,
+  title={Bailando: 3d dance generation by actor-critic gpt with choreographic memory},
+  author={Siyao, Li and Yu, Weijiang and Gu, Tianpei and Lin, Chunze and Wang, Quan and Qian, Chen and Loy, Chen Change and Liu, Ziwei},
+  booktitle={Proceedings of the IEEE/CVF conference on computer vision and pattern recognition},
+  pages={11050--11059},
+  year={2022}
 }
 ```
