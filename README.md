@@ -1,18 +1,27 @@
 # Prediction of Singing Facial Motions from Musical Features
 
-This repository contains the implementation code for the singing 
-facial expression estimation models proposed in this thesis, 
-including the Concatenation-based Model and the Cross-Attention-based 
-Model.
+This research was carried out as part of the IMLEX program.
 
-> **Note:** This repository is currently documented in Japanese. 
-> An English translation, along with detailed comments explaining 
-> the purpose and usage of each script, is planned for a future 
-> update.
+**What is the IMLEX program?** 
+
+[ENGLISH](https://www.imlex.org/) | [JAPANESE](https://imlex.tut.ac.jp/)
+
+This repository contains the implementation code for the singing facial expression estimation models proposed in this master's thesis, titled "Prediction of Singing Facial Motions from Musical Features." It implements two architectures, the Concatenation-based Model and the Cross-Attention-based Model, both of which take a singer's vocal audio and background music (BGM) as input and predict FLAME facial expression and head/neck pose parameters, which can then be rendered into a 3D singing animation.
+
 
 ## Dataset
 
-This project uses the [SingingHead dataset](https://github.com/wsj-sjtu/SingingHead).
+This study uses the [SingingHead dataset](https://github.com/wsj-sjtu/SingingHead). SingingHead is a large-scale singing dataset that contains singing videos, vocal audio, BGM, and 3D FLAME facial parameters.
+
+Among the data provided in SingingHead, this study uses the following three types of data:
+
+- **Vocal audio**: Singing vocals (`.wav`)
+- **BGM audio**: Accompaniment audio (`.wav`)
+- **FLAME parameters**: FLAME parameters representing facial motion during singing (`.pkl`)
+
+The FLAME parameters include **facial expressions (expression)** and **head and neck poses (global pose / neck pose)**. 
+
+In this study, these parameters are used as prediction targets, while **jaw pose is excluded from the prediction target**.
 
 ## Contents
 
