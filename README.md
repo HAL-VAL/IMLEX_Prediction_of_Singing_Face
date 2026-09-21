@@ -47,12 +47,11 @@ Ablation experiments are conducted to investigate the effects of **Positional En
 
 | Model | Positional Encoding | Volume-based Stability Loss | Training Script |
 |---|:---:|:---:|---|
-| Concatenation-based | ✓ |  | `scripts/train_audio_bgm.py` |
-| Concatenation-based | ✓ | ✓ | `scripts/train_audio_bgm_volstab.py` |
-| Cross-Attention-based |  |  | `scripts/train_crossattn.py` |
-| Cross-Attention-based | ✓ |  | `scripts/train_crossattn_pe.py` |
-| Cross-Attention-based |  | ✓ | `scripts/train_crossattn_volstab.py` |
-| Cross-Attention-based | ✓ | ✓ | `scripts/train_crossattn_pe_volstab.py` |
+| Concatenation-based | ✓ |  | `scripts/train_code_wav2andMFCC/train.py` |
+| Cross-Attention-based |  |  | `scripts/train_code_crossattention/train.py` |
+| Cross-Attention-based | ✓ |  | `scripts/train_code_crossattention/train_v2.py` |
+| Cross-Attention-based |  | ✓ | `scripts/train_code_crossattention/train_nope.py` |
+| Cross-Attention-based | ✓ | ✓| `scripts/train_code_crossattention/train_add_volstab.py` |
 
 
 ## Repository Structure
