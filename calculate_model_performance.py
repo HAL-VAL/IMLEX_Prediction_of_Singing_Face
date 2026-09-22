@@ -1,7 +1,7 @@
 """
 =============================================================================
-モデル効率性(パラメータ数・モデルサイズ・推論時間・スループット)計測スクリプト
-実データ(テストセット)を用いて Baseline / Ours を比較する
+Model Efficiency Measurement Script
+(Parameter Count, Model Size, Inference Time, Throughput)
 =============================================================================
 """
 
@@ -17,7 +17,7 @@ import numpy as np
 
 
 # ============================================================
-# パス設定(Linux実パス)
+# Path settings
 # ============================================================
 BASE_DIR = Path("/home/nagao2/src/Visualization")
 CHECKPOINT_DIR = BASE_DIR / "checkpoints"
@@ -28,24 +28,23 @@ OURS_FILE     = BASE_DIR / "scripts" / "train_code_crossattention" / "train_add_
 BASELINE_CKPT = CHECKPOINT_DIR / "audio_bgm_best_model_ep100.pth"
 OURS_CKPT     = CHECKPOINT_DIR / "crossattn_pe_volstab_best_model.pth"
 
-# データセットのパス(train.py / test_crossattn_pe_volstab.py と同じ構成)
 DATASET_BASE_DIR = BASE_DIR / "data" / "SingingHead"
 WAV2VEC_DIR = DATASET_BASE_DIR / "wav2vec_features"
 MFCC_DIR    = DATASET_BASE_DIR / "mfcc_features"
 TEST_TXT    = DATASET_BASE_DIR / "test.txt"
 
 SEQ_LEN = 240
-N_SAMPLES = 20          # 計測に使うテストサンプル数(平均を取る)
-N_RUNS_PER_SAMPLE = 10  # 各サンプルにつき何回forwardを回すか
-RANDOM_SEED = 42        # 再現性のための固定シード
+N_SAMPLES = 20          # Number of test samples used for measurement (averaged)
+N_RUNS_PER_SAMPLE = 10  # Number of forward passes per sample
+RANDOM_SEED = 42        # Fixed seed for reproducibility
 
 
 # ============================================================
-# モジュール読み込み(ファイルパス指定でロード、名前衝突を回避)
+# Module loading
 # ============================================================
 def load_module_from_path(module_name: str, file_path: Path):
     if not file_path.exists():
-        raise FileNotFoundError(f"ファイルが見つかりません: {file_path}")
+        raise FileNotFoundError(f"File not found: {file_path}")
     spec = importlib.util.spec_from_file_location(module_name, str(file_path))
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -57,10 +56,10 @@ ours_module     = load_module_from_path("ours_train", OURS_FILE)
 
 
 # ============================================================
-# 実データの読み込み(test_crossattn_pe_volstab.py の infer_one と同じロジック)
+# Data loading
 # ============================================================
 def load_real_sample(data_id: str, seq_len: int = SEQ_LEN):
-    # wav2vec 特徴(399フレーム → seq_len へ補間)
+    # wav2vec features (interpolate 399 frames -> seq_len)
     voice_feat = torch.from_numpy(
         np.load(os.path.join(WAV2VEC_DIR, f"{data_id}.npy"))
     ).float()
@@ -73,7 +72,7 @@ def load_real_sample(data_id: str, seq_len: int = SEQ_LEN):
         ).squeeze(0).T
     )  # (seq_len, 768)
 
-    # MFCC 特徴
+    # MFCC features
     mfcc = torch.from_numpy(
         np.load(os.path.join(MFCC_DIR, f"{data_id}.npy"))
     ).float()
@@ -86,7 +85,7 @@ def load_real_sample(data_id: str, seq_len: int = SEQ_LEN):
 
 
 # ============================================================
-# パラメータ数カウント
+# Parameter count
 # ============================================================
 def count_params(model):
     total = sum(p.numel() for p in model.parameters())
@@ -95,7 +94,7 @@ def count_params(model):
 
 
 # ============================================================
-# 推論時間計測(実データ・複数サンプル平均)
+# Inference time measurement (real data, averaged over multiple samples)
 # ============================================================
 def measure_inference_real_data(model, data_ids, device, seq_len=SEQ_LEN,
                                   n_runs_per_sample=N_RUNS_PER_SAMPLE):
@@ -108,7 +107,7 @@ def measure_inference_real_data(model, data_ids, device, seq_len=SEQ_LEN,
             voice_feat = voice_feat.to(device)
             mfcc = mfcc.to(device)
 
-            # warmup(このサンプルで数回捨てる)
+            # warmup
             for _ in range(3):
                 _ = model(voice_feat, mfcc)
             if device.type == "cuda":
@@ -128,27 +127,27 @@ def measure_inference_real_data(model, data_ids, device, seq_len=SEQ_LEN,
 
 
 # ============================================================
-# モデルごとのプロファイル実行
+# Run profiling for each model
 # ============================================================
 def profile_model(name, model, ckpt_path, data_ids, device, seq_len=SEQ_LEN):
     print(f"\n=== {name} ({ckpt_path.name}) ===")
 
     if not ckpt_path.exists():
-        raise FileNotFoundError(f"チェックポイントが見つかりません: {ckpt_path}")
+        raise FileNotFoundError(f"Checkpoint not found: {ckpt_path}")
 
     state_dict = torch.load(str(ckpt_path), map_location=device)
     model.load_state_dict(state_dict)
     model.to(device)
 
-    # 1. パラメータ数
+    # 1. Parameter count
     total, trainable = count_params(model)
     print(f"Total params: {total:,}, Trainable: {trainable:,}")
 
-    # 2. ストレージサイズ
+    # 2. Storage size
     size_mb = os.path.getsize(ckpt_path) / (1024 ** 2)
     print(f"Model size: {size_mb:.2f} MB")
 
-    # 3. 推論時間・スループット(実データ、複数サンプル平均)
+    # 3. Inference time / throughput (real data, averaged over multiple samples)
     avg_time, std_time = measure_inference_real_data(
         model, data_ids, device, seq_len=seq_len
     )
@@ -157,28 +156,28 @@ def profile_model(name, model, ckpt_path, data_ids, device, seq_len=SEQ_LEN):
           f"(n={len(data_ids)} real test samples, {N_RUNS_PER_SAMPLE} runs each)")
     print(f"Throughput: {throughput:.1f} fps")
 
-    # 4. リアルタイム判定(SingingHeadは30fps)
+    # 4. Real-time capability check (SingingHead is 30fps)
     print(f"Real-time capable: {'Yes' if throughput >= 30 else 'No'}")
 
 
 # ============================================================
-# メイン
+# Main
 # ============================================================
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
-    # ---- テストセットからサンプルIDをランダムに取得 ----
-    assert TEST_TXT.exists(), f"test.txt が見つかりません: {TEST_TXT}"
+    # ---- Randomly sample IDs from the test set ----
+    assert TEST_TXT.exists(), f"test.txt not found: {TEST_TXT}"
     with open(TEST_TXT, "r", encoding="utf-8") as f:
         all_test_ids = [line.strip() for line in f if line.strip()]
 
     random.seed(RANDOM_SEED)
     sample_ids = random.sample(all_test_ids, min(N_SAMPLES, len(all_test_ids)))
 
-    print(f"計測に使用するサンプル数: {len(sample_ids)} / {len(all_test_ids)} "
+    print(f"Number of samples used for measurement: {len(sample_ids)} / {len(all_test_ids)} "
           f"(random seed={RANDOM_SEED})")
-    print(f"選ばれたサンプル: {sample_ids}")
+    print(f"Selected samples: {sample_ids}")
 
     # ---- Baseline ----
     baseline_model = baseline_module.MusicToExpressionTransformer(
