@@ -143,23 +143,23 @@ ground-truth data.
 
 | Model | Positional Encoding | Volume-based Stability Loss | Inference Script |
 |---|:---:|:---:|---|
-| Concatenation-based | ✓ |  | `scripts/train_code_wav2andMFCC/test.py` | 
-| Cross-Attention-based |  |  | `scripts/train_code_crossattention/test.py` | 
-| Cross-Attention-based | ✓ |  | `scripts/train_code_crossattention/test_v2.py` | 
-| Cross-Attention-based |  | ✓ | `scripts/train_code_crossattention/test_nope.py` | 
-| Cross-Attention-based | ✓ | ✓ | `scripts/train_code_crossattention/test_add_volstab.py` | 
+| Concatenation-based | ✓ |  | `scripts/test_code_wav2andMFCC/test.py` | 
+| Cross-Attention-based |  |  | `scripts/test_code_crossattention/test.py` | 
+| Cross-Attention-based | ✓ |  | `scripts/test_code_crossattention/test_v2.py` | 
+| Cross-Attention-based |  | ✓ | `scripts/test_code_crossattention/test_nope.py` | 
+| Cross-Attention-based | ✓ | ✓ | `scripts/test_code_crossattention/test_add_volstab.py` | 
 
 All inference scripts use the same command-line arguments. For example:
 
 ```bash
 # Single sample
-python scripts/train_code_crossattention/test.py --id id15_3_1_3
+python scripts/test_code_crossattention/test.py --id id15_3_1_3
 
 # Batch inference
-python scripts/train_code_crossattention/test.py --txt test.txt
+python scripts/test_code_crossattention/test.py --txt test.txt
 
 # Specify a checkpoint
-python scripts/train_code_crossattention/test.py --txt test.txt \
+python scripts/test_code_crossattention/test.py --txt test.txt \
     --checkpoint checkpoints/crossattention_audio_bgm_best_model_ep50.pth
 ```
 
@@ -179,7 +179,47 @@ beats.
 python evaluation.py --pred_dir predictions_crossattn_pe_volstab
 ```
 
+## End-to-End Throughput
 
+The end-to-end throughput scripts measure the entire inference pipeline
+from raw audio to predicted FLAME parameters:
+
+These scripts extract wav2vec 2.0 and MFCC features from the raw audio
+during measurement. The measured time therefore includes both feature
+extraction and model inference.
+Two scripts are provided for comparing the Concatenation-based and
+Cross-Attention-based models:
+```
+# Concatenation-based Model
+python scripts/test_code_wav2andMFCC/e2e_throughput_concat.py
+
+# Cross-Attention-based Model
+python scripts/test_code_crossattention/e2e_throughput_crossattn.py
+```
+By default, both scripts use 20 randomly selected test samples, 10 runs
+per sample, and 240 output frames (8 seconds at 30 fps). The device is
+automatically set to CUDA when available.
+The same measurement settings and random seed are used in both scripts
+so that the two models can be compared under the same conditions.
+Optional arguments can be used to change the measurement conditions:
+```
+# Change the number of test samples
+python scripts/test_code_wav2andMFCC/e2e_throughput_concat.py --n_samples 30
+```
+
+They also report reference FPS values from SingingHead (UniSinger) and Think2Sing for comparison.
+
+## Rendering
+ 
+`output_mixedwav.py` mixes each sample's vocal and BGM tracks into a
+single normalized audio file, and `rendering.py` renders the predicted
+FLAME sequences into
+MP4 videos with the mixed audio attached:
+ 
+```bash
+python output_mixedwav.py
+python rendering.py
+```
 
 ### Citation
 ```bibtex
