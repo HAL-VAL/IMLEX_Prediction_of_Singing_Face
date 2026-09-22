@@ -61,7 +61,12 @@ IMLEX_Prediction_of_Singing_Face/
 ├── FLAME_PyTorch/                 # FLAME model
 ├── predictions/                   # Directory for storing prediction results
 ├── rendering_result/              # Rendered videos of prediction results
-├── scripts/                       # Scripts for training, inference, and feature extraction
+├── scripts/                       # Scripts for training, inference, feature extraction, and analysis
+│   ├── train_code_wav2andMFCC/    # Training & feature extraction scripts (Concatenation-based)
+│   ├── test_code_wav2andMFCC/     # Inference scripts (Concatenation-based)
+│   ├── train_code_crossattention/ # Training scripts (Cross-Attention-based)
+│   ├── test_code_crossattention/  # Inference scripts (Cross-Attention-based)
+│   └── analysis                   # Preliminary PCA and correlation analysis scripts
 ├── calculate_model_performance.py # Utility for measuring model size, number of parameters, and throughput
 ├── evaluation.py                  # Quantitative evaluation (MSE, MAE, PPE, velocity error, jitter, and Beat Align score)
 ├── output_mixedwav.py             # Mixes vocal and BGM audio to create audio for rendered videos
@@ -106,6 +111,33 @@ before training or inference:
 python scripts/train_code_wav2andMFCC/wav2vec_extract.py   # -> wav2vec_features/{id}.npy  (T, 768)
 python scripts/train_code_wav2andMFCC/extract_mfcc.py      # -> mfcc_features/{id}.npy     (240, 64)
 ```
+
+## Exploratory Data Analysis & Feature Correlation
+
+Before training, you can run preliminary feature extraction and Principal Component Analysis (PCA) located in `scripts/analysis/` to analyze the statistical correlation between musical features (Vocal / BGM) and FLAME parameters.
+
+### Analysis Scripts
+
+| Script Path | Audio Modality | FLAME Target | Dimension | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| `scripts/analysis/pca_vocal_exp.py` | Vocal (`audio_seqs`) | Expression (`expcodes`) | 50D | PCA & correlation analysis between vocal audio and facial expressions |
+| `scripts/analysis/pca_vocal_pose.py` | Vocal (`audio_seqs`) | Pose (`global/neck_pose`) | 6D | PCA & correlation analysis between vocal audio and head/neck poses |
+| `scripts/analysis/pca_vocal_pose_exp.py` | Vocal (`audio_seqs`) | Combined (Exp + Pose) | 56D | PCA & correlation analysis between vocal audio and all parameters |
+| `scripts/analysis/pca_bgm_exp.py` | BGM (`bgm_seqs`) | Expression (`expcodes`) | 50D | PCA & correlation analysis between BGM audio and facial expressions |
+| `scripts/analysis/pca_bgm_pose.py` | BGM (`bgm_seqs`) | Pose (`posecodes`) | 6D | PCA & correlation analysis between BGM audio and head/neck poses |
+| `scripts/analysis/pca_bgm_pose_exp.py` | BGM (`bgm_seqs`) | Combined (Exp + Pose) | 56D | PCA & correlation analysis between BGM audio and all parameters |
+
+### Running Analysis
+
+```bash
+python scripts/analysis/pca_vocal_exp.py
+```
+These scripts will:
+
+1. Extract 9-dimensional audio/musical features (Onset, F0, Centroid, Chroma, Contrast, Mel, MFCC, RMS, ZCR) resized to 240 frames.
+2. Standardize and apply PCA to the FLAME parameters.
+3. Compute Pearson correlation coefficients and p-values, saving the results as CSV files and generating correlation heatmaps under pca_figures/.
+
 
 ## Training
  
